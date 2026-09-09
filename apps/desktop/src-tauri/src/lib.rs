@@ -182,6 +182,7 @@ const KEYRING_DROPBOX_TOKENS: &str = "dropbox_tokens";
 const KEYRING_AI_OPENAI: &str = "ai_key_openai";
 const KEYRING_AI_ANTHROPIC: &str = "ai_key_anthropic";
 const KEYRING_AI_GEMINI: &str = "ai_key_gemini";
+const KEYRING_AI_OPENCODE_GO: &str = "ai_key_opencode_go";
 const KEYRING_EMAIL_CAPTURE_PASSWORD: &str = "email_capture_password";
 const DROPBOX_AUTH_ENDPOINT: &str = "https://www.dropbox.com/oauth2/authorize";
 const DROPBOX_TOKEN_ENDPOINT: &str = "https://api.dropboxapi.com/oauth2/token";
@@ -432,6 +433,8 @@ struct AppConfigToml {
     ai_key_anthropic: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     ai_key_gemini: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    ai_key_opencode_go: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     email_capture_config: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]

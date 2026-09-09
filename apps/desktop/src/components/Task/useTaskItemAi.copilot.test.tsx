@@ -334,4 +334,19 @@ describe('TaskItem copilot wiring', () => {
         const lastCall = calls[calls.length - 1]?.[0];
         expect(lastCall?.copilotEnabled).toBe(true);
     });
+
+    it('passes a session ID to the AI hook while editing and none when idle', async () => {
+        useUiStore.setState({ editingTaskId: rowTask.id });
+        const { unmount } = render(
+            <LanguageProvider>
+                <TaskItem task={rowTask} />
+            </LanguageProvider>
+        );
+        await settleSuggestion();
+        const editingCalls = vi.mocked(useTaskItemAi).mock.calls;
+        const editingSession = editingCalls[editingCalls.length - 1]?.[0]?.aiSessionId;
+        expect(typeof editingSession).toBe('string');
+        expect(String(editingSession ?? '')).not.toBe('');
+        unmount();
+    });
 });

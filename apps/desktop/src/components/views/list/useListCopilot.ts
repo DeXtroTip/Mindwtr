@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { AppData } from '@mindwtr/core';
-import { createAIProvider, type AIProviderId } from '@mindwtr/core';
+import { createAIProvider, generateUUID, type AIProviderId } from '@mindwtr/core';
 import { buildCopilotConfig, isAIKeyRequired, loadAIKey } from '../../../lib/ai-config';
 import type { CopilotPart } from '../../Task/useTaskItemAi';
 
@@ -22,6 +22,20 @@ export function useListCopilot({ settings, newTaskTitle, allContexts, allTags }:
     const [copilotContext, setCopilotContext] = useState<string | null>(null);
     const [copilotTags, setCopilotTags] = useState<string[]>([]);
     const copilotAbortRef = useRef<AbortController | null>(null);
+    // One OpenCode Go session per active capture input; rotated once on each
+    // empty-to-non-empty transition.
+    const [aiSessionId, setAiSessionId] = useState('');
+    const wasEmptyRef = useRef(true);
+    useEffect(() => {
+        const isEmpty = newTaskTitle.trim().length === 0;
+        if (wasEmptyRef.current && !isEmpty && !aiSessionId) {
+            setAiSessionId(generateUUID());
+        }
+        if (isEmpty) {
+            setAiSessionId('');
+        }
+        wasEmptyRef.current = isEmpty;
+    }, [aiSessionId, newTaskTitle]);
 
     useEffect(() => {
         let active = true;
@@ -50,7 +64,7 @@ export function useListCopilot({ settings, newTaskTitle, allContexts, allTags }:
         let cancelled = false;
         const handle = setTimeout(async () => {
             try {
-                const provider = createAIProvider(await buildCopilotConfig(settings, aiKey));
+                const provider = createAIProvider(await buildCopilotConfig(settings, aiKey, aiSessionId || undefined));
                 if (copilotAbortRef.current) copilotAbortRef.current.abort();
                 const abortController = typeof AbortController === 'function' ? new AbortController() : null;
                 copilotAbortRef.current = abortController;
@@ -76,7 +90,7 @@ export function useListCopilot({ settings, newTaskTitle, allContexts, allTags }:
                 copilotAbortRef.current = null;
             }
         };
-    }, [aiEnabled, aiKey, allContexts, allTags, keyRequired, newTaskTitle, settings]);
+    }, [aiEnabled, aiKey, aiSessionId, allContexts, allTags, keyRequired, newTaskTitle, settings]);
 
     // Per-part apply (#1022). This row has no time estimate to suggest, so the
     // parts are the context and one per tag.

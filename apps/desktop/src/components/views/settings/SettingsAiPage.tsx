@@ -24,6 +24,7 @@ type Labels = {
     aiProviderOpenAI: string;
     aiProviderGemini: string;
     aiProviderAnthropic: string;
+    aiProviderOpenCodeGo: string;
     aiModel: string;
     aiBaseUrl: string;
     aiBaseUrlHint: string;
@@ -219,7 +220,9 @@ export function SettingsAiPage({
         ? t.aiProviderGemini
         : aiProvider === 'anthropic'
             ? t.aiProviderAnthropic
-            : t.aiProviderOpenAI;
+            : aiProvider === 'opencode-go'
+                ? t.aiProviderOpenCodeGo
+                : t.aiProviderOpenAI;
     const aiConsentDescription = t.aiConsentDescription.replace('{provider}', selectedProviderLabel);
     const showCustomBaseUrlModelHint = aiProvider === 'openai'
         && !aiBaseUrl.trim()
@@ -336,6 +339,7 @@ export function SettingsAiPage({
                                     <option value="openai">{t.aiProviderOpenAI}</option>
                                     <option value="gemini">{t.aiProviderGemini}</option>
                                     <option value="anthropic">{t.aiProviderAnthropic}</option>
+                                    <option value="opencode-go">{t.aiProviderOpenCodeGo}</option>
                                 </select>
                             </SettingRow>
 
@@ -373,7 +377,7 @@ export function SettingsAiPage({
                                 </datalist>
                             </SettingRow>
 
-                            {aiProvider === 'openai' && (
+                            {(aiProvider === 'openai' || aiProvider === 'opencode-go') && (
                                 <SettingRow settingsKey="aiReasoning" title={t.aiReasoning} description={t.aiReasoningHint}>
                                     <select
                                         aria-label={t.aiReasoning}

@@ -46,6 +46,14 @@ describe('isAIKeyRequired', () => {
             model: 'gemini-2.5-flash',
         }))).toBe(true);
     });
+
+    it('requires key for opencode-go even with a stale base URL', () => {
+        expect(isAIKeyRequired(createSettings({
+            provider: 'opencode-go',
+            model: 'gpt-5.6-luna',
+            baseUrl: 'http://localhost:11434/v1',
+        }))).toBe(true);
+    });
 });
 
 describe('buildAIConfig', () => {

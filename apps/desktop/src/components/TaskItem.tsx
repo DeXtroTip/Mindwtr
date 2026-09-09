@@ -27,6 +27,7 @@ import {
     useTaskStore,
     areDraftAttachmentsDirty,
     isTaskDraftDirty,
+    generateUUID,
     type TaskDraftSetter,
 } from '@mindwtr/core';
 import { cn } from '../lib/utils';
@@ -139,6 +140,15 @@ export const TaskItem = memo(function TaskItem({
 }: TaskItemProps) {
     const [isEditing, setIsEditing] = useState(false);
     const [autoFocusTitle, setAutoFocusTitle] = useState(false);
+    // One OpenCode Go session per inline editor opening; rotated on reopen.
+    const [aiSessionId, setAiSessionId] = useState('');
+    useEffect(() => {
+        if (isEditing) {
+            setAiSessionId(generateUUID());
+        } else {
+            setAiSessionId('');
+        }
+    }, [isEditing]);
     const showObsidianNoteAttachment = useObsidianStore((state) => state.config.enabled);
     const [quickActionMenu, setQuickActionMenu] = useState<{ x: number; y: number } | null>(null);
     const [renameRequestToken, setRenameRequestToken] = useState(0);
@@ -508,6 +518,7 @@ export const TaskItem = memo(function TaskItem({
         // surface renders one of these, so gate them on the row actually being
         // edited instead of firing for every collapsed row on the screen.
         copilotEnabled: isEditing,
+        aiSessionId: aiSessionId || undefined,
     });
     const { resetCopilotDraft, resetAiState } = ai;
 

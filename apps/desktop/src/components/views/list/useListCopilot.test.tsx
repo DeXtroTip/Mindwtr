@@ -10,8 +10,10 @@ vi.mock('@mindwtr/core', async (importOriginal) => {
     return { ...actual, createAIProvider: () => ({ predictMetadata }) };
 });
 
+const buildCopilotConfigMock = vi.hoisted(() => vi.fn(async (_settings: unknown, _apiKey: string, _sessionId?: string) => ({})));
+
 vi.mock('../../../lib/ai-config', () => ({
-    buildCopilotConfig: vi.fn(async () => ({})),
+    buildCopilotConfig: buildCopilotConfigMock,
     isAIKeyRequired: () => false,
     loadAIKey: vi.fn(async () => 'test-key'),
 }));
@@ -59,6 +61,38 @@ describe('useListCopilot suggestion parts', () => {
             { kind: 'context', value: '@phone' },
             { kind: 'tag', value: '#errand' },
         ]);
+    });
+
+    it('reuses one OpenCode Go session per capture input and rotates after clear', async () => {
+        const opencodeSettings = { ai: { enabled: true, provider: 'opencode-go' } } as never;
+        const hook = renderHook(
+            ({ title }: { title: string }) => useListCopilot({
+                settings: opencodeSettings,
+                newTaskTitle: title,
+                allContexts: ['@phone'],
+                allTags: ['#health'],
+            }),
+            { initialProps: { title: 'Book the dentist' } },
+        );
+        await settleSuggestion();
+        const firstSession = buildCopilotConfigMock.mock.calls[buildCopilotConfigMock.mock.calls.length - 1]?.[2];
+        expect(typeof firstSession).toBe('string');
+        expect(String(firstSession ?? '')).not.toBe('');
+
+        hook.rerender({ title: 'Book the dentist for Friday' });
+        await settleSuggestion();
+        expect(buildCopilotConfigMock.mock.calls[buildCopilotConfigMock.mock.calls.length - 1]?.[2]).toBe(firstSession);
+
+        hook.rerender({ title: '' });
+        await act(async () => {
+            await vi.advanceTimersByTimeAsync(100);
+        });
+        hook.rerender({ title: 'Book the optician' });
+        await settleSuggestion();
+        const rotated = buildCopilotConfigMock.mock.calls[buildCopilotConfigMock.mock.calls.length - 1]?.[2];
+        expect(typeof rotated).toBe('string');
+        expect(String(rotated ?? '')).not.toBe('');
+        expect(rotated).not.toBe(firstSession);
     });
 
     it('applies only the remaining parts on apply-all', async () => {

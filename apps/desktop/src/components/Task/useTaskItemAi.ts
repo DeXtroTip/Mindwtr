@@ -38,7 +38,9 @@ type UseTaskItemAiArgs = {
     setField: TaskDraftSetter;
     /** Off for surfaces that only want the on-demand actions (no background metadata calls). */
     copilotEnabled?: boolean;
-};
+    /** Stable OpenCode Go session for this editor opening; rotated on reopen. */
+    aiSessionId?: string;
+}
 
 export function useTaskItemAi({
     taskId,
@@ -57,6 +59,7 @@ export function useTaskItemAi({
     timeEstimatesEnabled,
     setField,
     copilotEnabled = true,
+    aiSessionId,
 }: UseTaskItemAiArgs) {
     const aiEnabled = settings?.ai?.enabled === true;
     const aiProvider = (settings?.ai?.provider ?? 'openai') as AIProviderId;
@@ -132,7 +135,7 @@ export function useTaskItemAi({
             copilotInputRef.current = signature;
             try {
                 const currentContexts = editContexts.split(',').map((c) => c.trim()).filter(Boolean);
-                const provider = createAIProvider(await buildCopilotConfig(settings ?? {}, aiKey));
+                const provider = createAIProvider(await buildCopilotConfig(settings ?? {}, aiKey, aiSessionId));
                 const abortController = typeof AbortController === 'function' ? new AbortController() : null;
                 localAbort = abortController;
                 const previousController = copilotAbortRef.current;
@@ -181,7 +184,7 @@ export function useTaskItemAi({
                 copilotAbortRef.current = null;
             }
         };
-    }, [aiEnabled, aiKey, aiProvider, contextOptions, copilotEnabled, copilotModel, editContexts, editDescription, editTitle, keyRequired, settings, tagOptions, taskId, timeEstimatesEnabled]);
+    }, [aiEnabled, aiKey, aiProvider, aiSessionId, contextOptions, copilotEnabled, copilotModel, editContexts, editDescription, editTitle, keyRequired, settings, tagOptions, taskId, timeEstimatesEnabled]);
 
     useEffect(() => {
         copilotMountedRef.current = true;
@@ -218,8 +221,8 @@ export function useTaskItemAi({
             setAiError(t('ai.missingKeyBody'));
             return null;
         }
-        return createAIProvider(await buildAIConfig(settings, aiKey));
-    }, [aiEnabled, aiKey, keyRequired, settings, t]);
+        return createAIProvider(await buildAIConfig(settings, aiKey, aiSessionId));
+    }, [aiEnabled, aiKey, aiSessionId, keyRequired, settings, t]);
 
     const resetCopilotDraft = useCallback(() => {
         setCopilotContext(undefined);

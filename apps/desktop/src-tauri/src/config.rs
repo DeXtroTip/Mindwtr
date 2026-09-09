@@ -945,6 +945,7 @@ const SECRET_FIELDS: &[&str] = &[
     "ai_key_openai",
     "ai_key_anthropic",
     "ai_key_gemini",
+    "ai_key_opencode_go",
     "email_capture_password",
     "local_api_token",
 ];
@@ -1996,6 +1997,12 @@ fn migrate_legacy_secrets(app: &tauri::AppHandle, config: &mut AppConfigToml) {
             migrated = true;
         }
     }
+    if let Some(value) = config.ai_key_opencode_go.clone() {
+        if set_keyring_secret(app, KEYRING_AI_OPENCODE_GO, Some(value)).is_ok() {
+            config.ai_key_opencode_go = None;
+            migrated = true;
+        }
+    }
     if let Some(value) = config.email_capture_password.clone() {
         if set_keyring_secret(app, KEYRING_EMAIL_CAPTURE_PASSWORD, Some(value)).is_ok() {
             config.email_capture_password = None;
@@ -2074,6 +2081,7 @@ pub(crate) fn get_ai_key(app: tauri::AppHandle, provider: String) -> Option<Stri
         "openai" => (KEYRING_AI_OPENAI, config.ai_key_openai.clone()),
         "anthropic" => (KEYRING_AI_ANTHROPIC, config.ai_key_anthropic.clone()),
         "gemini" => (KEYRING_AI_GEMINI, config.ai_key_gemini.clone()),
+        "opencode-go" => (KEYRING_AI_OPENCODE_GO, config.ai_key_opencode_go.clone()),
         _ => return None,
     };
     if let Ok(Some(value)) = get_keyring_secret(&app, key_name) {
@@ -2085,6 +2093,7 @@ pub(crate) fn get_ai_key(app: tauri::AppHandle, provider: String) -> Option<Stri
                 "openai" => config.ai_key_openai = None,
                 "anthropic" => config.ai_key_anthropic = None,
                 "gemini" => config.ai_key_gemini = None,
+                "opencode-go" => config.ai_key_opencode_go = None,
                 _ => {}
             }
             // Same as migrate_legacy_secrets: this write is what removes the
@@ -2107,6 +2116,7 @@ fn ai_key_label(provider: &str) -> &'static str {
         "openai" => "OpenAI API key",
         "anthropic" => "Anthropic API key",
         "gemini" => "Gemini API key",
+        "opencode-go" => "OpenCode Go API key",
         _ => "Secret",
     }
 }
@@ -2131,6 +2141,7 @@ pub(crate) fn set_ai_key(
         "openai" => KEYRING_AI_OPENAI,
         "anthropic" => KEYRING_AI_ANTHROPIC,
         "gemini" => KEYRING_AI_GEMINI,
+        "opencode-go" => KEYRING_AI_OPENCODE_GO,
         _ => return Ok(()),
     };
     match set_keyring_secret(&app, key_name, next_value.clone()) {
@@ -2140,6 +2151,7 @@ pub(crate) fn set_ai_key(
                 "openai" => config.ai_key_openai = None,
                 "anthropic" => config.ai_key_anthropic = None,
                 "gemini" => config.ai_key_gemini = None,
+                "opencode-go" => config.ai_key_opencode_go = None,
                 _ => {}
             }
             // Propagated, like the keyring-unavailable branch below: a failure
@@ -2153,6 +2165,7 @@ pub(crate) fn set_ai_key(
                 "openai" => config.ai_key_openai = next_value,
                 "anthropic" => config.ai_key_anthropic = next_value,
                 "gemini" => config.ai_key_gemini = next_value,
+                "opencode-go" => config.ai_key_opencode_go = next_value,
                 _ => {}
             }
             if should_emit_warning {
@@ -3229,6 +3242,7 @@ mod tests {
             ai_key_openai: Some("sk-openai".to_string()),
             ai_key_anthropic: Some("sk-anthropic".to_string()),
             ai_key_gemini: Some("sk-gemini".to_string()),
+            ai_key_opencode_go: Some("sk-opencode-go".to_string()),
             email_capture_config: Some("{\"host\":\"imap.example.com\"}".to_string()),
             email_capture_password: Some("email-secret".to_string()),
             local_api_enabled: Some("true".to_string()),
@@ -3434,7 +3448,10 @@ mod tests {
         fs::write(&secrets_path, "not = [valid").expect("corrupt secrets");
         let error = read_config_files_verified(&config_path, &secrets_path)
             .expect_err("unparseable secrets must fail");
-        assert!(error.contains("secrets.toml"), "error should name the file: {error}");
+        assert!(
+            error.contains("secrets.toml"),
+            "error should name the file: {error}"
+        );
     }
 
     #[test]

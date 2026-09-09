@@ -6,7 +6,7 @@ import { INCUBATE_ICON as IncubateIcon, START_LATER_ICON as StartLaterIcon, TASK
 const SomedayIcon = TASK_STATUS_ICONS.someday;
 const ReferenceIcon = TASK_STATUS_ICONS.reference;
 const NextIcon = TASK_STATUS_ICONS.next;
-import { DEFAULT_PROJECT_COLOR, filterProjectsBySelectedArea, formatTimeEstimateLabel, safeFormatDate, safeParseDate, setTaskViewSectionId, tFallback, type AppData, type Area, type Project, type Task, type TaskDraft, type TaskDraftSetter, type TaskPriority, type TimeEstimate,
+import { DEFAULT_PROJECT_COLOR, filterProjectsBySelectedArea, formatTimeEstimateLabel, generateUUID, safeFormatDate, safeParseDate, setTaskViewSectionId, tFallback, type AppData, type Area, type Project, type Task, type TaskDraft, type TaskDraftSetter, type TaskPriority, type TimeEstimate,
     numericTextCollator,
 } from '@mindwtr/core';
 
@@ -249,6 +249,8 @@ export const InboxProcessingWizard = memo(function InboxProcessingWizard({
         </div>
     );
 
+    // One OpenCode Go session for the wizard lifetime.
+    const [aiSessionId] = useState(() => generateUUID());
     // The same clarify action the task editor offers, on the task being
     // processed (#1022). Copilot stays off: the wizard makes no background AI
     // calls, only the one the user asks for.
@@ -269,6 +271,7 @@ export const InboxProcessingWizard = memo(function InboxProcessingWizard({
         timeEstimatesEnabled: showTimeEstimateField,
         setField,
         copilotEnabled: false,
+        aiSessionId,
     });
 
     // After a long step is submitted the view is left scrolled to the bottom;

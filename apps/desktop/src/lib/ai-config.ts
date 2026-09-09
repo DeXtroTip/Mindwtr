@@ -179,12 +179,12 @@ export function isAIKeyRequired(settings: AppData['settings'] | undefined): bool
     return !(config.provider === 'openai' && Boolean(config.endpoint));
 }
 
-export async function buildAIConfig(settings: AppData['settings'] | undefined, apiKey: string): Promise<AIProviderConfig> {
+export async function buildAIConfig(settings: AppData['settings'] | undefined, apiKey: string, sessionId?: string): Promise<AIProviderConfig> {
     if (isSandboxMode()) throw new Error('Unavailable in sandbox.');
-    return withDesktopFetch(buildCoreAIConfig(settings ?? {}, apiKey));
+    return withDesktopFetch(buildCoreAIConfig(settings ?? {}, apiKey, sessionId));
 }
 
-export async function buildCopilotConfig(settings: AppData['settings'] | undefined, apiKey: string): Promise<AIProviderConfig> {
+export async function buildCopilotConfig(settings: AppData['settings'] | undefined, apiKey: string, sessionId?: string): Promise<AIProviderConfig> {
     if (isSandboxMode()) throw new Error('Unavailable in sandbox.');
-    return withDesktopFetch(buildCoreCopilotConfig(settings ?? {}, apiKey));
+    return withDesktopFetch(buildCoreCopilotConfig(settings ?? {}, apiKey, sessionId));
 }

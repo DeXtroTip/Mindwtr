@@ -3,6 +3,7 @@ import {
     buildQuickAddParseOptions,
     buildReviewSteps,
     createAIProvider,
+    generateUUID,
     DEFAULT_AREA_COLOR,
     filterReviewSuggestionsToKnownIds,
     formatI18nTemplate,
@@ -139,6 +140,8 @@ export function WeeklyReviewGuideModal({ onClose }: WeeklyReviewGuideModalProps)
     const [aiLoading, setAiLoading] = useState(false);
     const [aiError, setAiError] = useState<string | null>(null);
     const [aiRan, setAiRan] = useState(false);
+    // One OpenCode Go session for the review modal lifetime.
+    const [aiSessionId] = useState(() => generateUUID());
     const [externalCalendarEvents, setExternalCalendarEvents] = useState<ExternalCalendarEvent[]>([]);
     const [externalCalendarLoading, setExternalCalendarLoading] = useState(false);
     const [externalCalendarError, setExternalCalendarError] = useState<string | null>(null);
@@ -407,7 +410,7 @@ export function WeeklyReviewGuideModal({ onClose }: WeeklyReviewGuideModalProps)
         }
         setAiLoading(true);
         try {
-            const provider = createAIProvider(await buildAIConfig(settings, apiKey));
+            const provider = createAIProvider(await buildAIConfig(settings, apiKey, aiSessionId));
             const response = await provider.analyzeReview({ items: staleItems });
             // Filter here, not in the apply path, so what is displayed and what
             // can be written never diverge.

@@ -16,6 +16,7 @@ const t = {
     aiProviderOpenAI: 'OpenAI',
     aiProviderGemini: 'Gemini',
     aiProviderAnthropic: 'Anthropic (Claude)',
+    aiProviderOpenCodeGo: 'OpenCode Go',
     aiModel: 'Model',
     aiBaseUrl: 'Custom OpenAI-compatible base URL',
     aiBaseUrlHint: 'Leave blank for official OpenAI. Set this for local or third-party OpenAI-compatible APIs such as llama.cpp, Ollama, LM Studio, GLM, or vLLM.',
@@ -174,6 +175,18 @@ describe('SettingsAiPage', () => {
             expect(expandSettingsSection('aiRequestTimeout')).toBe(true);
         });
         expect(getByLabelText('Request timeout')).toHaveValue('120');
+    });
+
+    it('offers OpenCode Go with reasoning but without OpenAI endpoint controls', () => {
+        const { getByDisplayValue, getByRole, queryByText } = render(
+            <SettingsAiPage {...baseProps} aiProvider="opencode-go" />,
+        );
+
+        fireEvent.click(getByRole('button', { name: /Enable AI assistant/i }));
+        expect(getByDisplayValue('OpenCode Go')).toBeInTheDocument();
+        expect(queryByText('Reasoning effort')).toBeInTheDocument();
+        expect(queryByText('Custom OpenAI-compatible base URL')).not.toBeInTheDocument();
+        expect(queryByText('Extra request parameters')).not.toBeInTheDocument();
     });
 
     it('warns when a non-OpenAI model is configured without a custom endpoint', () => {
