@@ -5,6 +5,7 @@ import {
     buildReviewSteps,
     createAIProvider,
     filterReviewSuggestionsToKnownIds,
+    generateUUID,
     formatTimeSpentLabel,
     getExternalCalendarDaySummaries,
     getWeeklyReviewBuckets,
@@ -112,6 +113,13 @@ export function useReviewModalController({
     const [aiLoading, setAiLoading] = useState(false);
     const [aiError, setAiError] = useState<string | null>(null);
     const [aiRan, setAiRan] = useState(false);
+    // One OpenCode Go session per review visibility session.
+    const [aiSessionId, setAiSessionId] = useState(() => generateUUID());
+    useEffect(() => {
+        if (visible) {
+            setAiSessionId(generateUUID());
+        }
+    }, [visible]);
     const [externalCalendarEvents, setExternalCalendarEvents] = useState<ExternalCalendarEvent[]>([]);
     const [externalCalendarLoading, setExternalCalendarLoading] = useState(false);
     const [externalCalendarError, setExternalCalendarError] = useState<string | null>(null);
@@ -388,7 +396,7 @@ export function useReviewModalController({
         }
         setAiLoading(true);
         try {
-            const provider = createAIProvider(buildAIConfig(settings, apiKey));
+            const provider = createAIProvider(buildAIConfig(settings, apiKey, aiSessionId));
             const response = await provider.analyzeReview({ items: staleItems });
             // Filter here, not in the apply path, so what is displayed and what
             // can be written never diverge.
@@ -407,7 +415,7 @@ export function useReviewModalController({
         } finally {
             setAiLoading(false);
         }
-    }, [aiEnabled, aiProvider, isActionableSuggestion, settings, staleItems]);
+    }, [aiEnabled, aiProvider, aiSessionId, isActionableSuggestion, settings, staleItems]);
 
     const applyAiSuggestions = useCallback(async () => {
         const updates = aiSuggestions

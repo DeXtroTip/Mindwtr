@@ -86,7 +86,7 @@ const isFossBuild = (): boolean => {
  * mobile AI path resolves the provider through here instead of reading
  * `settings.ai.provider`.
  *
- * @example resolveEffectiveAIProvider({ ai: { provider: 'gemini' } }) // 'openai' on a FOSS build
+ * @example resolveEffectiveAIProvider({ ai: { provider: 'opencode-go' } }) // 'openai' on a FOSS build
  */
 export function resolveEffectiveAIProvider(settings: AppData['settings'] | undefined): AIProviderId {
     const provider = (settings?.ai?.provider ?? 'openai') as AIProviderId;
@@ -131,12 +131,12 @@ const withRequestDiagnostics = (config: AIProviderConfig): AIProviderConfig => (
     },
 });
 
-export function buildAIConfig(settings: AppData['settings'], apiKey: string): AIProviderConfig {
+export function buildAIConfig(settings: AppData['settings'] | undefined, apiKey: string, sessionId?: string): AIProviderConfig {
     if (isSandboxMode()) throw new Error('Unavailable in sandbox');
-    return withRequestDiagnostics(buildCoreAIConfig(sanitizeFossSettings(settings), apiKey));
+    return withRequestDiagnostics(buildCoreAIConfig(sanitizeFossSettings(settings), apiKey, sessionId));
 }
 
-export function buildCopilotConfig(settings: AppData['settings'], apiKey: string): AIProviderConfig {
+export function buildCopilotConfig(settings: AppData['settings'] | undefined, apiKey: string, sessionId?: string): AIProviderConfig {
     if (isSandboxMode()) throw new Error('Unavailable in sandbox');
-    return withRequestDiagnostics(buildCoreCopilotConfig(sanitizeFossSettings(settings), apiKey));
+    return withRequestDiagnostics(buildCoreCopilotConfig(sanitizeFossSettings(settings), apiKey, sessionId));
 }

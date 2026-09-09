@@ -97,6 +97,7 @@ vi.mock('@mindwtr/core', async () => {
   buildQuickAddPreviewEntries: actual.buildQuickAddPreviewEntries,
   getPersonOptionNames: actual.getPersonOptionNames,
   createAIProvider: vi.fn(),
+  generateUUID: actual.generateUUID,
   DEFAULT_PROJECT_COLOR: '#94a3b8',
   getQuickAddProjectInitialProps: (props: any, fallbackAreaId?: string | null) => {
     const areaId = props?.areaId || fallbackAreaId || undefined;

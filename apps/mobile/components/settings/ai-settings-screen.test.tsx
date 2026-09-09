@@ -230,6 +230,34 @@ describe('AISettingsScreen live model lists', () => {
         expect(latest().aiModelOptions).toEqual(['qwen3:8b']);
     });
 
+    it('fetches OpenCode Go models without a base URL and labels the provider', async () => {
+        coreMocks.fetchProviderModelsCached.mockResolvedValue(['gpt-5.6-luna']);
+
+        const latest = await renderScreen({
+            ai: { provider: 'opencode-go', speechToText: localWhisperSpeech },
+        });
+
+        expect(coreMocks.fetchProviderModelsCached).toHaveBeenCalledWith('opencode-go', {
+            apiKey: 'sk-test',
+            baseUrl: '',
+            kind: 'chat',
+        });
+        expect(latest().getAIProviderLabel('opencode-go')).toBe('settings.aiProviderOpenCodeGo');
+        expect(latest().aiModelOptions).toContain('gpt-5.6-luna');
+    });
+
+    it('forces the local provider on FOSS builds even with a synced opencode-go setting', async () => {
+        constantsState.isFossBuild = true;
+
+        const latest = await renderScreen({
+            ai: { provider: 'opencode-go', speechToText: localWhisperSpeech },
+        });
+
+        expect(coreMocks.fetchProviderModelsCached).not.toHaveBeenCalled();
+        expect(latest().aiProvider).toBe('openai');
+        expect(latest().aiModelOptions).toEqual(['llama3.2', 'qwen2.5', 'mistral', 'phi-4-mini']);
+    });
+
     it('lists Gemini speech models from its chat models', async () => {
         await renderScreen({
             ai: {

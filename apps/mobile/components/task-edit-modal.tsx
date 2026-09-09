@@ -24,6 +24,7 @@ import { Task,
     setTaskViewSectionId,
     shallow,
     sortViewSectionDefinitions,
+    generateUUID,
     tFallback, } from '@mindwtr/core';
 import { taskDraftToUpdatePatch } from '@mindwtr/core/task-draft';
 import { useLanguage } from '../contexts/language-context';
@@ -320,6 +321,15 @@ function TaskEditModalInner({
     const recurrenceWeekdayLabels = useMemo(() => getLocalizedWeekdayLabels(language, 'long'), [language]);
     const aiEnabled = settings.ai?.enabled === true;
     const aiProvider = resolveEffectiveAIProvider(settings);
+    // One OpenCode Go session per visible editor session.
+    const [aiSessionId, setAiSessionId] = useState('');
+    useEffect(() => {
+        if (visible) {
+            setAiSessionId(generateUUID());
+        } else {
+            setAiSessionId('');
+        }
+    }, [visible]);
 
     const draftContexts = useMemo(
         () => parseTokenList(taskEditDraft?.draft.contexts ?? '', '@'),
@@ -368,6 +378,7 @@ function TaskEditModalInner({
         settings,
         aiEnabled,
         aiProvider,
+        aiSessionId: aiSessionId || undefined,
         timeEstimatesEnabled,
         titleDraft,
         descriptionDraft,
@@ -873,6 +884,7 @@ function TaskEditModalInner({
         timeEstimatesEnabled,
         titleDraftRef,
         canMutate,
+        aiSessionId: aiSessionId || undefined,
     });
 
     const inputStyle = useMemo(

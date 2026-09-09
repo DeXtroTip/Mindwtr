@@ -32,6 +32,7 @@ import {
   sanitizeAttachmentUriForSyncMerge,
   shallow,
   splitQuickAddBulkLines,
+  generateUUID,
   tFallback,
   type Attachment,
   type CaptureAssemblyInput,
@@ -246,6 +247,8 @@ export default function CaptureScreen() {
   const [descriptionValue, setDescriptionValue] = useState(initialDescription);
   const [copilotSuggestion, setCopilotSuggestion] = useState<{ context?: string; timeEstimate?: TimeEstimate; tags?: string[] } | null>(null);
   const [aiKey, setAiKey] = useState('');
+  // One OpenCode Go session per capture modal session.
+  const [aiSessionId] = useState(() => generateUUID());
   const [copilotContext, setCopilotContext] = useState<string | undefined>(undefined);
   const [copilotEstimate, setCopilotEstimate] = useState<TimeEstimate | undefined>(undefined);
   const [copilotTags, setCopilotTags] = useState<string[]>([]);
@@ -358,7 +361,7 @@ export default function CaptureScreen() {
         if (copilotAbortRef.current) copilotAbortRef.current.abort();
         const abortController = typeof AbortController === 'function' ? new AbortController() : null;
         copilotAbortRef.current = abortController;
-        const provider = createAIProvider(buildCopilotConfig(settings, aiKey));
+        const provider = createAIProvider(buildCopilotConfig(settings, aiKey, aiSessionId));
         const suggestion = await provider.predictMetadata(
           { title, contexts: contextOptions, tags: tagOptions },
           abortController ? { signal: abortController.signal } : undefined
@@ -389,6 +392,7 @@ export default function CaptureScreen() {
     aiEnabled,
     aiKey,
     aiProvider,
+    aiSessionId,
     contextOptions,
     keyRequired,
     settings,

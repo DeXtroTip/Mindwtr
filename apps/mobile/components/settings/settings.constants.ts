@@ -146,6 +146,7 @@ const MOBILE_ROW_EXTRA_KEYS: Record<SettingsMenuRowId, readonly string[]> = {
     advanced: [
         'settings.aiProvider', 'settings.aiModel', 'settings.aiApiKey',
         'settings.aiProviderOpenAI', 'settings.aiProviderAnthropic', 'settings.aiProviderGemini',
+        'settings.aiProviderOpenCodeGo',
         // Desktop indexes these on its Integrations page, which has no mobile
         // row; mobile renders them on the Calendar screen under Advanced.
         'settings.calendar', 'settings.calendarMobile.icsSubscriptions', 'settings.externalCalendars',

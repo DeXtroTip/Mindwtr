@@ -11,6 +11,7 @@ import type { AppleClarificationBackend } from '@/lib/apple-clarification-prefer
 import { AiSettingsAssistantAnthropicPanel } from './ai-settings-assistant-anthropic-panel';
 import { AiSettingsAssistantGeminiPanel } from './ai-settings-assistant-gemini-panel';
 import { AiSettingsAssistantOpenAiPanel } from './ai-settings-assistant-openai-panel';
+import { AiSettingsAssistantOpenCodeGoPanel } from './ai-settings-assistant-opencode-go-panel';
 import { styles } from './settings.styles';
 
 type SettingsTranslator = (key: string, values?: Record<string, string | number | boolean | null | undefined>) => string;
@@ -253,6 +254,22 @@ export function AiSettingsAssistantCard({
                                     </CompactText>
                                 </TouchableOpacity>
                             )}
+                            {!isFossBuild && (
+                                <TouchableOpacity
+                                    style={[
+                                        styles.backendOption,
+                                        { borderColor: tc.border, backgroundColor: aiProvider === 'opencode-go' ? tc.filterBg : 'transparent' },
+                                    ]}
+                                    onPress={() => onAiProviderChange('opencode-go')}
+                                >
+                                    <CompactText
+                                        style={[styles.backendOptionText, { color: aiProvider === 'opencode-go' ? tc.tint : tc.secondaryText }]}
+                                        numberOfLines={2}
+                                    >
+                                        {t('settings.aiProviderOpenCodeGo')}
+                                    </CompactText>
+                                </TouchableOpacity>
+                            )}
                         </View>
                     </View>
 
@@ -340,6 +357,15 @@ export function AiSettingsAssistantCard({
                             aiThinkingBudget={aiThinkingBudget}
                             onAiApiKeyChange={onAiApiKeyChange}
                             onAiThinkingBudgetChange={onAiThinkingBudgetChange}
+                            t={t}
+                            tc={tc}
+                        />
+                    ) : aiProvider === 'opencode-go' ? (
+                        <AiSettingsAssistantOpenCodeGoPanel
+                            aiApiKey={aiApiKey}
+                            aiReasoningEffort={aiReasoningEffort}
+                            onAiApiKeyChange={onAiApiKeyChange}
+                            onAiReasoningEffortChange={onAiReasoningEffortChange}
                             t={t}
                             tc={tc}
                         />

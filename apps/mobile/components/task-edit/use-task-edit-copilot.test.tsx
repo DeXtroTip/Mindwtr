@@ -12,8 +12,10 @@ vi.mock('@mindwtr/core', () => ({
   createAIProvider: () => ({ predictMetadata }),
 }));
 
+const buildCopilotConfigMock = vi.hoisted(() => vi.fn((_settings: unknown, _apiKey: string, _sessionId?: string) => ({})));
+
 vi.mock('../../lib/ai-config', () => ({
-  buildCopilotConfig: () => ({}),
+  buildCopilotConfig: buildCopilotConfigMock,
   isAIKeyRequired: () => false,
   loadAIKey: async () => 'test-key',
   resolveEffectiveAIProvider: (settings?: { ai?: { provider?: string } }) => settings?.ai?.provider ?? 'openai',
@@ -46,6 +48,7 @@ function CopilotHost({
     settings: {} as never,
     aiEnabled: true,
     aiProvider: 'openai',
+    aiSessionId: 'session-1',
     timeEstimatesEnabled: true,
     titleDraft,
     descriptionDraft: '',
@@ -152,5 +155,32 @@ describe('useTaskEditCopilot suggestion parts', () => {
     });
 
     expect(copilot.pendingCopilotParts).toContainEqual({ kind: 'timeEstimate', value: '30min' });
+  });
+});
+
+describe('useTaskEditCopilot opencode-go session', () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    predictMetadata.mockReset();
+    buildCopilotConfigMock.mockClear();
+    predictMetadata.mockResolvedValue({ context: '@phone', tags: [] });
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('passes the editor session ID to the copilot config', async () => {
+    const setDraftField = vi.fn();
+    let copilot!: ReturnType<typeof useTaskEditCopilot>;
+    await act(async () => {
+      create(<CopilotHost setDraftField={setDraftField} onResult={(value) => { copilot = value; }} />);
+    });
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(900);
+    });
+    expect(buildCopilotConfigMock).toHaveBeenCalled();
+    expect(buildCopilotConfigMock.mock.calls.at(-1)?.[2]).toBe('session-1');
+    expect(copilot.pendingCopilotParts).toContainEqual({ kind: 'context', value: '@phone' });
   });
 });

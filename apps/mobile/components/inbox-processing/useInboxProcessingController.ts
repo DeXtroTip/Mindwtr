@@ -12,6 +12,7 @@ import {
   addBreadcrumb,
   buildQuickAddParseOptions,
   createProcessInboxSession,
+  generateUUID,
   DEFAULT_PROJECT_COLOR,
   collectTaskTokenUsage,
   createAIProvider,
@@ -166,6 +167,15 @@ export function useInboxProcessingController({
   const [processingSession, setProcessingSession] = useState<ProcessInboxSession>(
     () => createProcessInboxSession(),
   );
+  // One OpenCode Go session per visible processing modal session.
+  const [aiSessionId, setAiSessionId] = useState('');
+  useEffect(() => {
+    if (visible) {
+      setAiSessionId(generateUUID());
+    } else {
+      setAiSessionId('');
+    }
+  }, [visible]);
   const [actionabilityChoice, setActionabilityChoice] = useState<ActionabilityChoice>(null);
   const [twoMinuteChoice, setTwoMinuteChoice] = useState<TwoMinuteChoice>(null);
   const [executionChoice, setExecutionChoice] = useState<ExecutionChoice>(null);
@@ -1536,7 +1546,7 @@ export function useInboxProcessingController({
     }
     setIsAIWorking(true);
     try {
-      const provider = createAIProvider(buildAIConfig(settings ?? {}, apiKey));
+      const provider = createAIProvider(buildAIConfig(settings ?? {}, apiKey, aiSessionId || undefined));
       const contextOptions = Array.from(new Set([
         ...contextSuggestionPool,
         ...selectedContexts,
@@ -1590,6 +1600,7 @@ export function useInboxProcessingController({
   }, [
     aiEnabled,
     aiProvider,
+    aiSessionId,
     appleClarificationBackend,
     closeAIModal,
     contextSuggestionPool,

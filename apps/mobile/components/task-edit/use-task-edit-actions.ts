@@ -74,7 +74,8 @@ type TaskEditActionsParams = {
     timeEstimatesEnabled: boolean;
     titleDraftRef: React.MutableRefObject<string>;
     canMutate?: () => boolean;
-};
+    aiSessionId?: string;
+}
 
 export function useTaskEditActions({
     aiEnabled,
@@ -109,6 +110,7 @@ export function useTaskEditActions({
     timeEstimatesEnabled,
     titleDraftRef,
     canMutate = () => true,
+    aiSessionId,
 }: TaskEditActionsParams) {
     const showTaskWriteError = useCallback((message?: string) => showToast({
         title: tFallback(t, 'common.error', 'Error'),
@@ -377,8 +379,8 @@ export function useTaskEditActions({
             Alert.alert(t('ai.missingKeyTitle'), t('ai.missingKeyBody'));
             return null;
         }
-        return createAIProvider(buildAIConfig(settings, apiKey));
-    }, [aiEnabled, settings, t]);
+        return createAIProvider(buildAIConfig(settings, apiKey, aiSessionId));
+    }, [aiEnabled, aiSessionId, settings, t]);
 
     const applyAISuggestion = useCallback((suggested: { title?: string; context?: string; timeEstimate?: TimeEstimate }) => {
         if (!canMutate()) return;

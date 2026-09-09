@@ -181,7 +181,9 @@ export function AISettingsScreen() {
                 ? t('settings.aiProviderOpenAI')
                 : provider === 'gemini'
                     ? t('settings.aiProviderGemini')
-                    : t('settings.aiProviderAnthropic')
+                    : provider === 'opencode-go'
+                        ? t('settings.aiProviderOpenCodeGo')
+                        : t('settings.aiProviderAnthropic')
     );
 
     const getAIProviderPolicyUrl = (provider: AIProviderId): string => (
@@ -191,7 +193,9 @@ export function AISettingsScreen() {
                 ? 'https://openai.com/policies/privacy-policy'
                 : provider === 'gemini'
                     ? 'https://policies.google.com/privacy'
-                    : 'https://www.anthropic.com/privacy'
+                    : provider === 'opencode-go'
+                        ? 'https://opencode.ai/legal/privacy-policy'
+                        : 'https://www.anthropic.com/privacy'
     );
 
     const loadAIProviderConsent = async (): Promise<Record<string, boolean>> => {

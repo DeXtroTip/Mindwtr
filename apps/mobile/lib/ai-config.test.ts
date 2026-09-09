@@ -12,6 +12,61 @@ vi.mock('expo-constants', () => ({
     },
 }));
 
+describe('mobile ai-config opencode-go', () => {
+    it('carries the interaction session ID and ignores stale base URLs', () => {
+        expoConfigMock.extra = {};
+        const config = buildAIConfig(
+            { ai: { provider: 'opencode-go', model: 'gpt-5.6-luna', baseUrl: 'http://localhost:11434/v1' } },
+            'oc-key',
+            'session-1',
+        );
+        expect(config.provider).toBe('opencode-go');
+        expect(config.sessionId).toBe('session-1');
+        expect(config.endpoint).toBeUndefined();
+
+        const copilot = buildCopilotConfig(
+            { ai: { provider: 'opencode-go', copilotModel: 'gpt-5.6-luna' } },
+            'oc-key',
+            'session-2',
+        );
+        expect(copilot.sessionId).toBe('session-2');
+    });
+
+    it('forces the local provider on FOSS builds with a stale opencode-go setting', () => {
+        expoConfigMock.extra = { isFossBuild: true };
+        try {
+            const config = buildAIConfig(
+                { ai: { provider: 'opencode-go', model: 'gpt-5.6-luna' } },
+                'oc-key',
+                'session-1',
+            );
+            expect(config.provider).toBe('openai');
+            expect(config.sessionId).toBeUndefined();
+        } finally {
+            expoConfigMock.extra = {};
+        }
+    });
+
+    it('returns to the local model names when a FOSS build rewrites the provider', () => {
+        expoConfigMock.extra = { isFossBuild: true };
+        try {
+            const config = buildAIConfig(
+                { ai: { provider: 'opencode-go', model: 'gpt-5.6-luna', copilotModel: 'kimi-k3' } },
+                '',
+            );
+            expect(config.model).toBe('llama3.2');
+
+            const copilot = buildCopilotConfig(
+                { ai: { provider: 'gemini', model: 'gemini-3.6-flash', copilotModel: 'gemini-3.5-flash-lite' } },
+                '',
+            );
+            expect(copilot.model).toBe('llama3.2');
+        } finally {
+            expoConfigMock.extra = {};
+        }
+    });
+});
+
 describe('resolveEffectiveAIProvider', () => {
     it('keeps the configured provider on a regular build', () => {
         expoConfigMock.extra = {};

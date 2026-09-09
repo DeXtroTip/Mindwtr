@@ -19,6 +19,7 @@ type UseTaskEditCopilotArgs = {
     settings: AppData['settings'];
     aiEnabled: boolean;
     aiProvider: AIProviderId;
+    aiSessionId?: string;
     timeEstimatesEnabled: boolean;
     titleDraft: string;
     descriptionDraft: string;
@@ -33,6 +34,7 @@ export function useTaskEditCopilot({
     settings,
     aiEnabled,
     aiProvider,
+    aiSessionId,
     timeEstimatesEnabled,
     titleDraft,
     descriptionDraft,
@@ -104,7 +106,7 @@ export function useTaskEditCopilot({
                 previousController.abort();
             }
             try {
-                const provider = createAIProvider(buildCopilotConfig(settings, aiKey));
+                const provider = createAIProvider(buildCopilotConfig(settings, aiKey, aiSessionId));
                 const suggestion = await provider.predictMetadata(
                     { title: input, contexts: contextOptionsRef.current, tags: tagOptionsRef.current },
                     abortController ? { signal: abortController.signal } : undefined
@@ -127,7 +129,7 @@ export function useTaskEditCopilot({
                 copilotAbortRef.current = null;
             }
         };
-    }, [aiEnabled, aiKey, descriptionDraft, keyRequired, settings, timeEstimatesEnabled, titleDraft]);
+    }, [aiEnabled, aiKey, aiSessionId, descriptionDraft, keyRequired, settings, timeEstimatesEnabled, titleDraft]);
 
     useEffect(() => {
         if (!visible) {
