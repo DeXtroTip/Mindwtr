@@ -1199,6 +1199,7 @@ export const frOverrides: Record<string, string> = {
         'settings.aiProviderOpenAI': 'OpenAI',
         'settings.aiProviderGemini': 'Gemini',
         'settings.aiProviderAnthropic': 'Anthropic (Claude)',
+        'settings.aiProviderOpenCodeGo': 'OpenCode Go',
         'settings.aiEffortLow': 'Faible',
         'settings.aiEffortMedium': 'Moyen',
         'settings.aiEffortHigh': 'Élevé',

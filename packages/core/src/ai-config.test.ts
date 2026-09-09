@@ -107,6 +107,32 @@ describe('ai-config endpoint mapping', () => {
         expect(config.reasoningEffort).toBe('low');
     });
 
+    it('uses gpt-5.6-luna defaults and fixed behavior for opencode-go', () => {
+        const config = buildAIConfig(
+            createSettings({ provider: 'opencode-go', baseUrl: 'http://localhost:11434/v1' }),
+            'oc-key',
+            'session-1',
+        );
+        expect(config.provider).toBe('opencode-go');
+        expect(config.model).toBe('gpt-5.6-luna');
+        expect(config.endpoint).toBeUndefined();
+        expect(config.extraBodyParams).toBeUndefined();
+        expect(config.sessionId).toBe('session-1');
+
+        const copilot = buildCopilotConfig(
+            createSettings({ provider: 'opencode-go' }),
+            'oc-key',
+            'session-2',
+        );
+        expect(copilot.model).toBe('gpt-5.6-luna');
+        expect(copilot.sessionId).toBe('session-2');
+    });
+
+    it('omits empty opencode-go session IDs so the adapter generates one', () => {
+        const config = buildAIConfig(createSettings({ provider: 'opencode-go' }), 'oc-key', '   ');
+        expect(config.sessionId).toBeUndefined();
+    });
+
     it('passes OpenAI-compatible extra body params only for OpenAI provider configs', () => {
         const openAIConfig = buildAIConfig(
             createSettings({

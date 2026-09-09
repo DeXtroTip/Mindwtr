@@ -14,6 +14,8 @@ export const ANTHROPIC_DEFAULT_MODEL = 'claude-sonnet-5';
 export const OPENAI_COPILOT_DEFAULT_MODEL = OPENAI_FAST_MODEL;
 export const GEMINI_COPILOT_DEFAULT_MODEL = 'gemini-3.5-flash-lite';
 export const ANTHROPIC_COPILOT_DEFAULT_MODEL = 'claude-haiku-4-5';
+export const OPENCODE_GO_DEFAULT_MODEL = 'gpt-5.6-luna';
+export const OPENCODE_GO_COPILOT_DEFAULT_MODEL = OPENCODE_GO_DEFAULT_MODEL;
 export const DEFAULT_GEMINI_THINKING_BUDGET = 0;
 export const DEFAULT_ANTHROPIC_THINKING_BUDGET = 0;
 
@@ -36,6 +38,14 @@ export const ANTHROPIC_MODEL_OPTIONS = [
     'claude-haiku-4-5',
     'claude-opus-5',
     'claude-opus-4-8',
+];
+// Curated OpenCode Go fallback (live /models is preferred). All entries
+// support Structured Outputs as of 2026-09-09; gpt-5.6-luna is the default.
+export const OPENCODE_GO_MODEL_OPTIONS = [
+    OPENCODE_GO_DEFAULT_MODEL,
+    'muse-spark-1.3-contributor',
+    'glm-5.3-flash',
+    'qwen3.8-flash',
 ];
 
 
@@ -105,7 +115,9 @@ export function getDefaultAIConfig(provider: AIProviderId): AIProviderConfig {
                 ? OPENAI_DEFAULT_MODEL
                 : provider === 'anthropic'
                     ? ANTHROPIC_DEFAULT_MODEL
-                    : GEMINI_DEFAULT_MODEL,
+                    : provider === 'opencode-go'
+                        ? OPENCODE_GO_DEFAULT_MODEL
+                        : GEMINI_DEFAULT_MODEL,
         reasoningEffort: DEFAULT_REASONING_EFFORT,
         ...(provider === 'gemini' ? { thinkingBudget: DEFAULT_GEMINI_THINKING_BUDGET } : {}),
         ...(provider === 'anthropic' ? { thinkingBudget: DEFAULT_ANTHROPIC_THINKING_BUDGET } : {}),
@@ -115,12 +127,14 @@ export function getDefaultAIConfig(provider: AIProviderId): AIProviderConfig {
 export function getModelOptions(provider: AIProviderId): string[] {
     if (provider === 'openai') return OPENAI_MODEL_OPTIONS;
     if (provider === 'anthropic') return ANTHROPIC_MODEL_OPTIONS;
+    if (provider === 'opencode-go') return OPENCODE_GO_MODEL_OPTIONS;
     return GEMINI_MODEL_OPTIONS;
 }
 
 export function getDefaultCopilotModel(provider: AIProviderId): string {
     if (provider === 'openai') return OPENAI_COPILOT_DEFAULT_MODEL;
     if (provider === 'anthropic') return ANTHROPIC_COPILOT_DEFAULT_MODEL;
+    if (provider === 'opencode-go') return OPENCODE_GO_COPILOT_DEFAULT_MODEL;
     return GEMINI_COPILOT_DEFAULT_MODEL;
 }
 

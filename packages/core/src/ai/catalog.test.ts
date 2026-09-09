@@ -7,6 +7,12 @@ import {
     OPENAI_COPILOT_DEFAULT_MODEL,
     OPENAI_DEFAULT_MODEL,
     OPENAI_MODEL_OPTIONS,
+    OPENCODE_GO_COPILOT_DEFAULT_MODEL,
+    OPENCODE_GO_DEFAULT_MODEL,
+    OPENCODE_GO_MODEL_OPTIONS,
+    getDefaultAIConfig,
+    getDefaultCopilotModel,
+    getModelOptions,
     resolveAnthropicModel,
     resolveGeminiModel,
 } from './catalog';
@@ -16,6 +22,15 @@ describe('current model lineup (#985)', () => {
         expect(OPENAI_DEFAULT_MODEL).toBe('gpt-5.6-terra');
         expect(OPENAI_COPILOT_DEFAULT_MODEL).toBe('gpt-5.6-luna');
         expect(OPENAI_MODEL_OPTIONS).toEqual(['gpt-5.6', 'gpt-5.6-terra', 'gpt-5.6-luna']);
+    });
+
+    it('offers gpt-5.6-luna as the OpenCode Go default and copilot model', () => {
+        expect(OPENCODE_GO_DEFAULT_MODEL).toBe('gpt-5.6-luna');
+        expect(OPENCODE_GO_COPILOT_DEFAULT_MODEL).toBe('gpt-5.6-luna');
+        expect(OPENCODE_GO_MODEL_OPTIONS[0]).toBe('gpt-5.6-luna');
+        expect(getDefaultAIConfig('opencode-go').model).toBe('gpt-5.6-luna');
+        expect(getDefaultCopilotModel('opencode-go')).toBe('gpt-5.6-luna');
+        expect(getModelOptions('opencode-go')).toEqual(OPENCODE_GO_MODEL_OPTIONS);
     });
 
     it('offers claude-opus-5 alongside the existing Anthropic tiers', () => {

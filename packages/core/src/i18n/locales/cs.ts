@@ -1261,6 +1261,7 @@ export const csOverrides: Record<string, string> = {
         'settings.aiProviderOpenAI': 'OpenAI',
         'settings.aiProviderGemini': 'Gemini',
         'settings.aiProviderAnthropic': 'Anthropic (Claude)',
+        'settings.aiProviderOpenCodeGo': 'OpenCode Go',
         'settings.aiEffortLow': 'Nízké',
         'settings.aiEffortMedium': 'Střední',
         'settings.aiEffortHigh': 'Vysoké',

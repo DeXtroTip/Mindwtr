@@ -13,6 +13,7 @@ export const allowedEnglishMirrorTerms = [
     'Gemini',
     'Anthropic',
     'Claude',
+    'OpenCode',
     'Pomodoro',
     'GTD',
     'ICS',

@@ -1322,6 +1322,7 @@ export const zhHant: Record<string, string> = {
         'settings.aiProviderOpenAI': 'OpenAI',
         'settings.aiProviderGemini': 'Gemini',
         'settings.aiProviderAnthropic': 'Anthropic (Claude)',
+        'settings.aiProviderOpenCodeGo': 'OpenCode Go',
         'settings.aiEffortLow': '低',
         'settings.aiEffortMedium': '中',
         'settings.aiEffortHigh': '高',

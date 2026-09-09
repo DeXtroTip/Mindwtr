@@ -218,6 +218,55 @@ describe('fetchProviderModels: anthropic', () => {
     });
 });
 
+describe('fetchProviderModels: opencode-go', () => {
+    it('uses the fixed endpoint with bearer auth and user agent', async () => {
+        const { fetchImpl, calls } = captureFetch(() => jsonResponse({
+            data: [{ id: 'gpt-5.6-luna' }, { id: 'muse-spark-1.3-contributor' }],
+        }));
+
+        const models = await fetchProviderModels('opencode-go', { fetchImpl, apiKey: 'oc-key' });
+
+        expect(models).toEqual(['gpt-5.6-luna', 'muse-spark-1.3-contributor']);
+        expect(calls[0].url).toBe('https://opencode.ai/zen/go/v1/models');
+        expect(calls[0].init.headers).toEqual({
+            Authorization: 'Bearer oc-key',
+            'User-Agent': 'Mindwtr/1.0',
+        });
+    });
+
+    it('ignores baseUrl so stale OpenAI endpoints cannot redirect the request', async () => {
+        const { fetchImpl, calls } = captureFetch(() => jsonResponse({ data: [] }));
+
+        await fetchProviderModels('opencode-go', {
+            fetchImpl,
+            apiKey: 'oc-key',
+            baseUrl: 'http://localhost:11434/v1',
+        });
+
+        expect(calls[0].url).toBe('https://opencode.ai/zen/go/v1/models');
+    });
+
+    it('throws without fetching when the API key is empty', async () => {
+        const { fetchImpl } = captureFetch(() => jsonResponse({ data: [] }));
+
+        await expect(fetchProviderModels('opencode-go', { fetchImpl })).rejects.toThrow(/API key/);
+        expect(fetchImpl).not.toHaveBeenCalled();
+    });
+
+    it('throws when the body has no data array', async () => {
+        const { fetchImpl } = captureFetch(() => jsonResponse({ models: [] }));
+
+        await expect(fetchProviderModels('opencode-go', { fetchImpl, apiKey: 'oc-key' }))
+            .rejects.toThrow(/missing a data array/);
+    });
+
+    it('throws on HTTP error', async () => {
+        const { fetchImpl } = captureFetch(() => jsonResponse({ error: 'nope' }, 401));
+
+        await expect(fetchProviderModels('opencode-go', { fetchImpl, apiKey: 'oc-key' })).rejects.toThrow(/401/);
+    });
+});
+
 describe('fetchProviderModels: timeout', () => {
     beforeEach(() => vi.useFakeTimers());
     afterEach(() => vi.useRealTimers());

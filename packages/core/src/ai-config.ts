@@ -125,7 +125,7 @@ export const parseOpenAIExtraBodyParamsInput = (input: string): OpenAIExtraBodyP
     }
 };
 
-export function buildAIConfig(settings: AppData['settings'], apiKey: string): AIProviderConfig {
+export function buildAIConfig(settings: AppData['settings'], apiKey: string, sessionId?: string): AIProviderConfig {
     const provider = (settings.ai?.provider ?? 'openai') as AIProviderId;
     const defaults = getDefaultAIConfig(provider);
     const endpoint = provider === 'openai'
@@ -134,6 +134,7 @@ export function buildAIConfig(settings: AppData['settings'], apiKey: string): AI
     const extraBodyParams = provider === 'openai'
         ? normalizeOpenAIExtraBodyParams(settings.ai?.openAIExtraBodyParams)
         : undefined;
+    const trimmedSessionId = String(sessionId ?? '').trim();
     return {
         provider,
         apiKey,
@@ -143,10 +144,11 @@ export function buildAIConfig(settings: AppData['settings'], apiKey: string): AI
         timeoutMs: resolveAIRequestTimeoutSeconds(settings.ai?.requestTimeoutSeconds) * 1000,
         ...(endpoint ? { endpoint } : {}),
         ...(extraBodyParams ? { extraBodyParams } : {}),
+        ...(provider === 'opencode-go' && trimmedSessionId ? { sessionId: trimmedSessionId } : {}),
     };
 }
 
-export function buildCopilotConfig(settings: AppData['settings'], apiKey: string): AIProviderConfig {
+export function buildCopilotConfig(settings: AppData['settings'], apiKey: string, sessionId?: string): AIProviderConfig {
     const provider = (settings.ai?.provider ?? 'openai') as AIProviderId;
     const endpoint = provider === 'openai'
         ? resolveOpenAIEndpoint(settings.ai?.baseUrl)
@@ -154,6 +156,7 @@ export function buildCopilotConfig(settings: AppData['settings'], apiKey: string
     const extraBodyParams = provider === 'openai'
         ? normalizeOpenAIExtraBodyParams(settings.ai?.openAIExtraBodyParams)
         : undefined;
+    const trimmedSessionId = String(sessionId ?? '').trim();
     return {
         provider,
         apiKey,
@@ -162,6 +165,7 @@ export function buildCopilotConfig(settings: AppData['settings'], apiKey: string
         timeoutMs: resolveAIRequestTimeoutSeconds(settings.ai?.requestTimeoutSeconds) * 1000,
         ...(provider === 'gemini' ? { thinkingBudget: DEFAULT_GEMINI_THINKING_BUDGET } : {}),
         ...(provider === 'anthropic' ? { thinkingBudget: DEFAULT_ANTHROPIC_THINKING_BUDGET } : {}),
+        ...(provider === 'opencode-go' && trimmedSessionId ? { sessionId: trimmedSessionId } : {}),
         ...(endpoint ? { endpoint } : {}),
         ...(extraBodyParams ? { extraBodyParams } : {}),
     };

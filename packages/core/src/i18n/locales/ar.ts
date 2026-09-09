@@ -1024,6 +1024,7 @@ export const arOverrides: Record<string, string> = {
         'settings.aiProviderOpenAI': 'OpenAI',
         'settings.aiProviderGemini': 'تَوأَم',
         'settings.aiProviderAnthropic': 'أنثروبي (كلود)',
+        'settings.aiProviderOpenCodeGo': 'OpenCode Go',
         'settings.aiEffortLow': 'قليل',
         'settings.aiEffortMedium': 'واسطة',
         'settings.aiEffortHigh': 'عالي',

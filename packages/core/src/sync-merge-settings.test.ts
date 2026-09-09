@@ -672,3 +672,28 @@ describe('restoreDeviceLocalAiSettings', () => {
         expect(restored.settings.ai?.baseUrl).toBe('http://disk/v1');
     });
 });
+
+describe('mergeSettingsForSync > ai provider opencode-go', () => {
+    it('accepts opencode-go and strips the API key', () => {
+        const local: Settings = {};
+        const incoming: Settings = {
+            ai: { provider: 'opencode-go', model: 'gpt-5.6-luna', apiKey: 'secret-should-not-travel' },
+        };
+
+        const merged = mergeSettingsForSync(local, incoming);
+
+        expect(merged.ai?.provider).toBe('opencode-go');
+        expect(merged.ai?.apiKey).toBeUndefined();
+    });
+
+    it('rejects unknown providers in favor of the local fallback', () => {
+        const local: Settings = { ai: { provider: 'openai', model: 'gpt-5.6-terra' } };
+        const incoming: Settings = {
+            ai: { provider: 'unknown-provider' as never, model: 'gpt-5.6-luna' },
+        };
+
+        const merged = mergeSettingsForSync(local, incoming);
+
+        expect(merged.ai?.provider).toBe('openai');
+    });
+});

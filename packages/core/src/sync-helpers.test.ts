@@ -1215,3 +1215,21 @@ describe('device-local AI endpoint fields', () => {
         }));
     });
 });
+
+describe('sanitizeAppDataForRemote > ai provider opencode-go', () => {
+    it('preserves the opencode-go provider while stripping the API key', async () => {
+        const { sanitizeAppDataForRemote } = await import('./sync-helpers');
+        const data = {
+            tasks: [],
+            projects: [],
+            sections: [],
+            settings: {
+                syncPreferences: { ai: true },
+                ai: { provider: 'opencode-go', model: 'gpt-5.6-luna', apiKey: 'secret' },
+            },
+        } as unknown as Parameters<typeof sanitizeAppDataForRemote>[0];
+        const sanitized = sanitizeAppDataForRemote(data);
+        expect(sanitized.settings.ai?.provider).toBe('opencode-go');
+        expect(sanitized.settings.ai?.apiKey).toBeUndefined();
+    });
+});

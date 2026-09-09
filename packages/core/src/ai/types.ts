@@ -1,6 +1,6 @@
 import type { TimeEstimate } from '../types';
 
-export type AIProviderId = 'gemini' | 'openai' | 'anthropic';
+export type AIProviderId = 'gemini' | 'openai' | 'anthropic' | 'opencode-go';
 
 // 'minimal' minimizes reasoning tokens for the fastest time-to-first-token on
 // latency-sensitive paths (e.g. the copilot type-ahead) on GPT-5 reasoning models.
@@ -96,6 +96,7 @@ export interface AIProviderConfig {
     apiKey: string;
     model: string;
     endpoint?: string;
+    sessionId?: string;
     fetcher?: typeof fetch;
     reasoningEffort?: AIReasoningEffort;
     thinkingBudget?: number;

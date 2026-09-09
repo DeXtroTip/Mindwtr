@@ -1341,6 +1341,7 @@ export const ukOverrides: Record<string, string> = {
     "settings.aiProviderOpenAI": "OpenAI",
     "settings.aiProviderGemini": "Близнюки",
     "settings.aiProviderAnthropic": "Антропік (Клод)",
+    "settings.aiProviderOpenCodeGo": "OpenCode Go",
     "settings.aiEffortLow": "Низький",
     "settings.aiEffortMedium": "Середній",
     "settings.aiEffortHigh": "Високий",

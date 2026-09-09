@@ -1364,6 +1364,7 @@ export const svOverrides: Record<string, string> = {
         'settings.aiProviderOpenAI': 'OpenAI',
         'settings.aiProviderGemini': 'Gemini',
         'settings.aiProviderAnthropic': 'Anthropic (Claude)',
+        'settings.aiProviderOpenCodeGo': 'OpenCode Go',
         'settings.aiEffortLow': 'Låg',
         'settings.aiEffortMedium': 'Medel',
         'settings.aiEffortHigh': 'Hög',

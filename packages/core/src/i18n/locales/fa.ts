@@ -1364,6 +1364,7 @@ export const faOverrides: Record<string, string> = {
         'settings.aiProviderOpenAI': 'OpenAI',
         'settings.aiProviderGemini': 'Gemini',
         'settings.aiProviderAnthropic': 'Anthropic (Claude)',
+        'settings.aiProviderOpenCodeGo': 'OpenCode Go',
         'settings.aiEffortLow': 'کم',
         'settings.aiEffortMedium': 'متوسط',
         'settings.aiEffortHigh': 'زیاد',

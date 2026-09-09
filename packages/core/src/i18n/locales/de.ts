@@ -1978,6 +1978,7 @@ export const deOverrides: Record<string, string> = {
         'settings.aiMobile.whisperDownloadsRequireADevBuildOrProductionBuildNot': 'Whisper-Downloads erfordern einen Dev- oder Produktions-Build (nicht Expo Go).',
         'settings.aiMobile.whisperTranscriptionRequiresADevBuildOrProductionBuildNot': 'Die Whisper-Transkription erfordert einen Dev- oder Produktions-Build (nicht Expo Go).',
         'settings.aiProviderAnthropic': 'Anthropic (Claude)',
+        'settings.aiProviderOpenCodeGo': 'OpenCode Go',
         'settings.aiUsageBreakdown': 'Aufschlüsseln: Wähle im selben KI-Menü „Aufschlüsseln“, um eine Aufgabe oder ein Projekt in konkrete Schritte zu zerlegen.',
         'settings.aiUsageClarify': 'Klären: Öffne eine Aufgabe, klicke im Editor auf die KI-Schaltfläche und wähle „Klären“, um eine vage Aufgabe in eine klare nächste Aktion zu verwandeln.',
         'settings.aiUsageReview': 'Wöchentliche Revision: Öffne die Wöchentliche Revision, gehe zum KI-Schritt und klicke auf „Ausführen“, um vorgeschlagene Aktionen für liegengebliebene Aufgaben zu erhalten.',

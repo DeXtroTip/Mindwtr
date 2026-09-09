@@ -5,7 +5,7 @@
 // something the caller degrades from — see mergeModelOptions.
 import { fetchTextWithTimeout } from './utils';
 
-export type ModelListProviderId = 'openai' | 'gemini' | 'anthropic';
+export type ModelListProviderId = 'openai' | 'gemini' | 'anthropic' | 'opencode-go';
 export type ModelListKind = 'chat' | 'transcription';
 
 export type FetchProviderModelsOptions = {
@@ -174,6 +174,37 @@ async function fetchAnthropicModels(options: ResolvedOptions): Promise<string[]>
         .filter(Boolean);
 }
 
+async function fetchOpenCodeGoModels(options: ResolvedOptions): Promise<string[]> {
+    // OpenCode Go has no transcription catalog; the chat list backs both pickers.
+    const apiKey = String(options.apiKey || '').trim();
+    if (!apiKey) {
+        throw new Error('OpenCode Go models request needs an API key.');
+    }
+    const response = await fetchTextWithTimeout(
+        'https://opencode.ai/zen/go/v1/models',
+        {
+            headers: {
+                Authorization: `Bearer ${apiKey}`,
+                'User-Agent': 'Mindwtr/1.0',
+            },
+        },
+        options.timeoutMs,
+        'OpenCode Go models',
+        undefined,
+        options.fetchImpl,
+    );
+    if (!response.ok) {
+        throw new Error(`OpenCode Go models request failed (${response.status}).`);
+    }
+    const data = (readJsonBody(response.bodyText, 'OpenCode Go models') as { data?: unknown } | null)?.data;
+    if (!Array.isArray(data)) {
+        throw new Error('OpenCode Go models response was missing a data array.');
+    }
+    return (data as Array<{ id?: unknown }>)
+        .map((entry) => (typeof entry?.id === 'string' ? entry.id.trim() : ''))
+        .filter(Boolean);
+}
+
 /**
  * Fetches and normalizes the live model list for a provider. Throws on HTTP
  * error, timeout, or a malformed body. Returns [] when the provider
@@ -187,6 +218,7 @@ export function fetchProviderModels(
     const resolved = resolveOptions(options);
     if (provider === 'openai') return fetchOpenAIModels(resolved);
     if (provider === 'gemini') return fetchGeminiModels(resolved);
+    if (provider === 'opencode-go') return fetchOpenCodeGoModels(resolved);
     return fetchAnthropicModels(resolved);
 }
 

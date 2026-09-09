@@ -470,7 +470,7 @@ export interface NotificationSettings {
 
 export interface AiSettings {
     enabled?: boolean;
-    provider?: 'gemini' | 'openai' | 'anthropic';
+    provider?: 'gemini' | 'openai' | 'anthropic' | 'opencode-go';
     apiKey?: string;
     baseUrl?: string;
     model?: string;
