@@ -109,7 +109,10 @@ export const LOCALES = {
         mode: 'overrides',
         native: 'Tiếng Việt',
         nonLatin: false,
-        translatedKeyFloor: 2288,
+        // Re-pinned 2026-09-08: 19 keys landed without the floor moving, and
+        // English growth since left the stale floor just under the 90% tier
+        // ceiling (2280/2535). Measured viOverrides count is 2299.
+        translatedKeyFloor: 2299,
     },
     zh: {
         loadSync: () => require('./locales/zh-Hans') as typeof import('./locales/zh-Hans'),

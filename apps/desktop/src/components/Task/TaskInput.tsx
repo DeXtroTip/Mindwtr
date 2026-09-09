@@ -73,6 +73,37 @@ const ensureCaretVisible = (input: HTMLInputElement, caret: number) => {
     }
 };
 
+const MAX_DROPDOWN_HEIGHT = 240;
+const MIN_DROPDOWN_HEIGHT = 96;
+const DROPDOWN_ROW_ESTIMATE = 28;
+const DROPDOWN_VIEWPORT_MARGIN = 12;
+
+const clampDropdownHeight = (available: number): number => (
+    Math.min(MAX_DROPDOWN_HEIGHT, Math.max(MIN_DROPDOWN_HEIGHT, Math.floor(available)))
+);
+
+/**
+ * Picks which side of the input the suggestion list opens on and how tall it
+ * may grow without leaving the viewport. Pure over rect + viewport height so
+ * jsdom tests can call it without layout.
+ */
+export function resolveDropdownPlacement(
+    inputRect: { top: number; bottom: number },
+    viewportHeight: number,
+    optionCount: number,
+): { dropUp: boolean; maxHeight: number } {
+    const spaceBelow = viewportHeight - inputRect.bottom - DROPDOWN_VIEWPORT_MARGIN;
+    const spaceAbove = inputRect.top - DROPDOWN_VIEWPORT_MARGIN;
+    const needed = Math.min(
+        MAX_DROPDOWN_HEIGHT,
+        Math.max(MIN_DROPDOWN_HEIGHT, optionCount * DROPDOWN_ROW_ESTIMATE + 8),
+    );
+    if (spaceBelow >= needed || spaceBelow >= spaceAbove) {
+        return { dropUp: false, maxHeight: clampDropdownHeight(spaceBelow) };
+    }
+    return { dropUp: true, maxHeight: clampDropdownHeight(spaceAbove) };
+}
+
 export type TaskInputAcceptedSuggestion =
     | { kind: 'project'; label: string; value: string; projectId: string }
     | { kind: 'createProject'; label: string; value: string; projectId: string | null }
@@ -277,6 +308,12 @@ export function TaskInput({
     const listboxId = useId();
     const [trigger, setTrigger] = useState<TriggerState | null>(null);
     const [selectedIndex, setSelectedIndex] = useState(0);
+    // The standalone quick-add popup is a small native window, so a fixed
+    // 240px list under the input gets clipped by the OS window edge. Clamp
+    // the list to the space the viewport actually has, flipping above the
+    // input when there is more room there.
+    const [dropUp, setDropUp] = useState(false);
+    const [dropMaxHeight, setDropMaxHeight] = useState(MAX_DROPDOWN_HEIGHT);
     const valueRef = useRef(value);
     const selectionRef = useRef<InputSelection>({
         start: value.length,
@@ -598,6 +635,24 @@ export function TaskInput({
     const activeDescendantId = hasOptions ? `${listboxId}-option-${selectedIndex}` : undefined;
 
     useEffect(() => {
+        if (!trigger || options.length === 0 || typeof window === 'undefined') return;
+        const place = () => {
+            const input = mergedRef.current;
+            if (!input) return;
+            const placement = resolveDropdownPlacement(
+                input.getBoundingClientRect(),
+                window.innerHeight,
+                options.length,
+            );
+            setDropUp(placement.dropUp);
+            setDropMaxHeight(placement.maxHeight);
+        };
+        place();
+        window.addEventListener('resize', place);
+        return () => window.removeEventListener('resize', place);
+    }, [mergedRef, options.length, trigger]);
+
+    useEffect(() => {
         if (!activeDescendantId) return;
         const activeOption = document.getElementById(activeDescendantId);
         if (activeOption && typeof activeOption.scrollIntoView === 'function') {
@@ -656,7 +711,11 @@ export function TaskInput({
                 <div
                     id={listboxId}
                     role="listbox"
-                    className="absolute z-20 mt-2 w-64 max-h-60 overflow-y-auto rounded-md border border-border bg-popover shadow-lg p-1 text-xs"
+                    style={{ maxHeight: dropMaxHeight }}
+                    className={cn(
+                        'absolute z-20 w-64 overflow-y-auto rounded-md border border-border bg-popover shadow-lg p-1 text-xs',
+                        dropUp ? 'bottom-full mb-2' : 'top-full mt-2',
+                    )}
                 >
                     {options.map((option, index) => (
                         <button

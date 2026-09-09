@@ -178,6 +178,31 @@ describe('SettingsMainPage', () => {
         expect(onDensityChange).toHaveBeenCalledWith('compact');
     });
 
+    it('offers quick add window sizes when enabled', () => {
+        const onQuickAddWindowSizeChange = vi.fn();
+        const hidden = render(<SettingsMainPage {...baseProps} />);
+        expect(hidden.queryByText('Quick add window size')).toBeNull();
+        hidden.unmount();
+
+        const { getByRole } = render(
+            <SettingsMainPage
+                {...baseProps}
+                showQuickAddWindowSize
+                quickAddWindowSize="large"
+                onQuickAddWindowSizeChange={onQuickAddWindowSizeChange}
+            />,
+        );
+
+        const select = getByRole('combobox', { name: 'Quick add window size' });
+        expect(select).toHaveValue('large');
+
+        fireEvent.change(select, {
+            target: { value: 'compact' },
+        });
+
+        expect(onQuickAddWindowSizeChange).toHaveBeenCalledWith('compact');
+    });
+
     it('offers the small text size preset', () => {
         const onTextSizeChange = vi.fn();
         const { getByRole } = render(

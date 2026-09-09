@@ -190,6 +190,11 @@ export function QuickAddModal({ standaloneWindow = false }: QuickAddModalProps) 
         [allContexts, allTags]
     );
     const { t } = useLanguage();
+    const popupSize = useTaskStore((state) => state.settings?.window?.quickAddSize);
+    // Roomier rhythm on the taller presets so the content fills the window
+    // instead of bunching at the top; compact keeps the tight layout that
+    // fits the original 420px height.
+    const roomyPopup = standaloneWindow && popupSize !== 'compact';
     const [value, setValue] = useState('');
     const [selectedAreaId, setSelectedAreaId] = useState('');
     const [initialProps, setInitialProps] = useState<Partial<Task> | null>(null);
@@ -1188,11 +1193,14 @@ export function QuickAddModal({ standaloneWindow = false }: QuickAddModalProps) 
             // absolutely positioned and have to escape the panel.
             panelClassName={cn(
                 'overflow-visible max-h-[none]',
-                standaloneWindow ? 'max-w-none rounded-none border-0 shadow-none' : 'max-w-lg',
+                // Borderless and full-height in the popup: panel edges are
+                // invisible against the overlay, so the panel must fill the
+                // taller presets instead of leaving the content top-packed.
+                standaloneWindow ? 'h-full max-w-none rounded-none border-0 shadow-none' : 'max-w-lg',
             )}
             panelRef={modalRef}
         >
-                <div className="px-4 py-3 border-b flex items-center justify-between">
+                <div className={cn('border-b flex items-center justify-between px-4', roomyPopup ? 'py-4' : 'py-3')}>
                     <h3 id={titleId} className="font-semibold">{t('nav.addTask')}</h3>
                     <button
                         onClick={handleClose}
@@ -1233,7 +1241,19 @@ export function QuickAddModal({ standaloneWindow = false }: QuickAddModalProps) 
                     </div>
                 </div>
                 {captureMode === 'text' ? (
-                    <form onSubmit={handleSubmit} className="p-4 space-y-2" aria-busy={isSubmitting}>
+                    <form
+                        onSubmit={handleSubmit}
+                        aria-busy={isSubmitting}
+                        // Standalone uses gap instead of space-y: space-y's
+                        // sibling selector outranks mt-auto, which would pin
+                        // nothing to the bottom.
+                        className={cn(
+                            'p-4',
+                            standaloneWindow
+                                ? ['flex min-h-0 flex-1 flex-col', roomyPopup ? 'gap-3' : 'gap-2']
+                                : 'space-y-2',
+                        )}
+                    >
                         <div className="relative">
                             <TaskInput
                                 value={value}
@@ -1272,6 +1292,7 @@ export function QuickAddModal({ standaloneWindow = false }: QuickAddModalProps) 
                                 placeholder={t('nav.addTask')}
                                 className={cn(
                                     "w-full rounded-lg border border-border bg-card py-3 pl-4 pr-12 shadow-sm transition-colors focus:border-transparent focus:ring-2 focus:ring-primary",
+                                    roomyPopup && 'py-4 text-[15px]',
                                 )}
                             />
                             {/* "Add to today's focus" star sits inside the field's right edge —
@@ -1346,7 +1367,7 @@ export function QuickAddModal({ standaloneWindow = false }: QuickAddModalProps) 
                                 {t('calendar.scheduleAction')}: {scheduledLabel}
                             </p>
                         )}
-                        <div className="flex justify-end gap-2 pt-1">
+                        <div className={cn('flex justify-end gap-2 pt-1', standaloneWindow && 'mt-auto pt-4')}>
                             <input
                                 ref={fileInputRef}
                                 aria-label={tFallback(t, 'quickAdd.bulkImportTextFileLabel', 'Import text file')}
@@ -1409,7 +1430,7 @@ export function QuickAddModal({ standaloneWindow = false }: QuickAddModalProps) 
                         </div>
                     </form>
                 ) : (
-                    <div className="p-4 space-y-4">
+                    <div className={cn('p-4 space-y-4', standaloneWindow && 'flex min-h-0 flex-1 flex-col justify-center')}>
                         <div className="flex flex-col items-center justify-center gap-3">
                             <button
                                 type="button"

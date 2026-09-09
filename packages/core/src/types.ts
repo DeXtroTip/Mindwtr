@@ -444,11 +444,15 @@ export interface CalendarSettings {
     showCompleted?: boolean;
 }
 
+export type QuickAddWindowSize = 'compact' | 'default' | 'large';
+
 export interface WindowSettings {
     decorations?: boolean;
     closeBehavior?: 'ask' | 'tray' | 'quit';
     launchAtStartup?: boolean;
     showTray?: boolean;
+    /** Standalone quick-add popup size. Device-local like the rest of this group. */
+    quickAddSize?: QuickAddWindowSize;
 }
 
 export interface NotificationSettings {

@@ -7,8 +7,11 @@ use windows_sys::Win32::{
 };
 
 const QUIT_WATCHDOG_SECONDS: u64 = 5;
-const QUICK_ADD_WINDOW_WIDTH: f64 = 620.0;
-const QUICK_ADD_WINDOW_HEIGHT: f64 = 420.0;
+// Default preset of the configurable quick-add size (see
+// packages/core/src/quick-add-window-size.ts): the frontend resizes to the
+// stored preset after settings load, so these only set the pre-settings size.
+const QUICK_ADD_WINDOW_WIDTH: f64 = 680.0;
+const QUICK_ADD_WINDOW_HEIGHT: f64 = 540.0;
 const GNOME_INTERFACE_SCHEMA: &str = "org.gnome.desktop.interface";
 const GNOME_COLOR_SCHEME_KEY: &str = "color-scheme";
 const GNOME_GTK_THEME_KEY: &str = "gtk-theme";
@@ -728,7 +731,12 @@ fn center_quick_add_window(app: &tauri::AppHandle, window: &tauri::WebviewWindow
         }
         return;
     };
-    let window_size = quick_add_window_physical_size(monitor.scale_factor());
+    // Center on the live window size, not the creation constants: the frontend
+    // resizes to the configured preset after settings load, and centering on
+    // stale constants would drift a resized popup off-center on every show.
+    let window_size = window
+        .inner_size()
+        .unwrap_or_else(|_| quick_add_window_physical_size(monitor.scale_factor()));
     let position = centered_quick_add_position(monitor.work_area(), &window_size);
     if let Err(error) = window.set_position(position) {
         log::warn!("Failed to position quick add window: {error}");
@@ -922,7 +930,7 @@ mod tests {
     fn quick_add_window_physical_size_uses_monitor_scale_factor() {
         assert_eq!(
             quick_add_window_physical_size(2.0),
-            tauri::PhysicalSize::new(1240, 840)
+            tauri::PhysicalSize::new(1360, 1080)
         );
     }
 

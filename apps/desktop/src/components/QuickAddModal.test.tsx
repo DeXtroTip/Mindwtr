@@ -124,6 +124,31 @@ beforeEach(() => {
 });
 
 describe('QuickAddModal', () => {
+    it.each([
+        { size: 'compact' as const, roomy: false },
+        { size: 'default' as const, roomy: true },
+        { size: 'large' as const, roomy: true },
+    ])('uses the $size popup rhythm in the standalone window', async ({ size, roomy }) => {
+        renderQuickAddModal({ standaloneWindow: true });
+
+        await act(async () => {
+            window.dispatchEvent(new CustomEvent('mindwtr:quick-add', { detail: {} }));
+            await Promise.resolve();
+        });
+        // Set after open: opening refetches settings from storage, which
+        // would clobber a preset written before render.
+        act(() => {
+            useTaskStore.setState((state) => ({
+                ...state,
+                settings: { ...state.settings, window: { ...state.settings?.window, quickAddSize: size } },
+            }));
+        });
+
+        const form = document.querySelector('form[aria-busy]');
+        expect(form?.className).toContain(roomy ? 'gap-3' : 'gap-2');
+        expect(form?.className).not.toContain(roomy ? 'gap-2' : 'gap-3');
+    });
+
     it('submits once and exposes a busy, non-dismissible state while saving', async () => {
         const deferred = createDeferred<{ success: true; id: string }>();
         const addTask = vi.fn(() => deferred.promise);

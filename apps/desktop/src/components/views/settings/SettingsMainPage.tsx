@@ -4,7 +4,7 @@ import {
     GLOBAL_QUICK_ADD_SHORTCUT_DISABLED,
     getGlobalQuickAddShortcutOptions,
 } from '../../../lib/global-quick-add-shortcut';
-import { getLocaleCoverageTier, normalizeWeekStartSetting, resolveFeatureFlags, useTaskStore } from '@mindwtr/core';
+import { getLocaleCoverageTier, normalizeWeekStartSetting, resolveFeatureFlags, useTaskStore, type QuickAddWindowSize } from '@mindwtr/core';
 import type { DesktopThemeMode } from '../../../lib/theme';
 import { useState } from 'react';
 import { Check, ChevronDown } from 'lucide-react';
@@ -100,6 +100,11 @@ type Labels = {
     viewShortcuts: string;
     windowDecorations: string;
     windowDecorationsDesc: string;
+    quickAddWindowSize: string;
+    quickAddWindowSizeDesc: string;
+    quickAddWindowSizeCompact: string;
+    quickAddWindowSizeDefault: string;
+    quickAddWindowSizeLarge: string;
     closeBehavior: string;
     closeBehaviorDesc: string;
     closeBehaviorAsk: string;
@@ -146,6 +151,9 @@ export type SettingsMainPageProps = {
     showWindowDecorations?: boolean;
     windowDecorationsEnabled?: boolean;
     onWindowDecorationsChange?: (enabled: boolean) => void;
+    showQuickAddWindowSize?: boolean;
+    quickAddWindowSize?: QuickAddWindowSize;
+    onQuickAddWindowSizeChange?: (size: QuickAddWindowSize) => void;
     showCloseBehavior?: boolean;
     closeBehavior?: 'ask' | 'tray' | 'quit';
     onCloseBehaviorChange?: (behavior: 'ask' | 'tray' | 'quit') => void;
@@ -194,6 +202,9 @@ export function SettingsMainPage({
     showWindowDecorations = false,
     windowDecorationsEnabled = true,
     onWindowDecorationsChange,
+    showQuickAddWindowSize = false,
+    quickAddWindowSize = 'default',
+    onQuickAddWindowSizeChange,
     showCloseBehavior = false,
     closeBehavior = 'ask',
     onCloseBehaviorChange,
@@ -212,7 +223,7 @@ export function SettingsMainPage({
             ? `${native} — ${t.languagePartlyTranslated}`
             : native;
     };
-    const hasWindowSection = showWindowDecorations || showCloseBehavior || showLaunchAtStartup || showTrayToggle;
+    const hasWindowSection = showWindowDecorations || showQuickAddWindowSize || showCloseBehavior || showLaunchAtStartup || showTrayToggle;
     const isMac = typeof navigator !== 'undefined' && /mac/i.test(navigator.platform);
     const isWindows = typeof navigator !== 'undefined' && /win/i.test(navigator.userAgent);
     const globalQuickAddOptions = getGlobalQuickAddShortcutOptions({
@@ -540,6 +551,20 @@ export function SettingsMainPage({
                                     aria-label={t.windowDecorations}
                                     onCheckedChange={() => onWindowDecorationsChange?.(!windowDecorationsEnabled)}
                                 />
+                            </SettingRow>
+                        )}
+                        {showQuickAddWindowSize && (
+                            <SettingRow padded settingsKey="quickAddWindowSize" title={t.quickAddWindowSize} description={t.quickAddWindowSizeDesc}>
+                                <select
+                                    aria-label={t.quickAddWindowSize}
+                                    value={quickAddWindowSize}
+                                    onChange={(e) => onQuickAddWindowSizeChange?.(e.target.value as QuickAddWindowSize)}
+                                    className={selectCls}
+                                >
+                                    <option value="compact">{t.quickAddWindowSizeCompact}</option>
+                                    <option value="default">{t.quickAddWindowSizeDefault}</option>
+                                    <option value="large">{t.quickAddWindowSizeLarge}</option>
+                                </select>
                             </SettingRow>
                         )}
                         {showCloseBehavior && (

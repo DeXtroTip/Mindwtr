@@ -4,12 +4,14 @@ import {
     flushPendingSave,
     canUseJalaliCalendar,
     normalizeDateFormatSetting,
+    normalizeQuickAddWindowSize,
     normalizeTimeFormatSetting,
     normalizeWeekStartPreference,
     resolveCalendarSystemSetting,
     type AppearanceSettings,
     type AppData,
     type NotificationSettings,
+    type QuickAddWindowSize,
     type WindowSettings,
 } from '@mindwtr/core';
 
@@ -96,6 +98,7 @@ export function useSettingsMainPage({
     const showCalendarSystem = canUseJalaliCalendar({ language, systemLocale });
     const calendarSystem = resolveCalendarSystemSetting(settings?.calendarSystem, { language, systemLocale });
     const windowDecorationsEnabled = windowSettings?.decorations !== false;
+    const quickAddWindowSize = normalizeQuickAddWindowSize(windowSettings?.quickAddSize);
     const closeBehavior = resolveCloseBehavior(windowSettings?.closeBehavior, isFlatpak);
     const trayVisible = windowSettings?.showTray !== false;
 
@@ -228,6 +231,23 @@ export function useSettingsMainPage({
             .catch((error) => reportError('Failed to update time format', error));
     }, [showSaved, updateSettings]);
 
+    const onQuickAddWindowSizeChange = useCallback((size: QuickAddWindowSize) => {
+        updateSettings({
+            window: {
+                ...(settings?.window ?? {}),
+                quickAddSize: normalizeQuickAddWindowSize(size),
+            },
+        })
+            // The standalone popup reads settings from disk on open, not from
+            // this window's store, so flush now: without this a quick open
+            // after changing the preset re-reads the pre-change size.
+            .then(() => flushPendingSave())
+            .then(showSaved)
+            .catch((error) =>
+                reportError('Failed to update quick add window size', error),
+            );
+    }, [settings?.window, showSaved, updateSettings]);
+
     const onWindowDecorationsChange = useCallback((enabled: boolean) => {
         updateSettings({
             window: {
@@ -332,6 +352,7 @@ export function useSettingsMainPage({
         launchAtStartupEnabled,
         launchAtStartupLoading,
         onCloseBehaviorChange,
+        onQuickAddWindowSizeChange,
         onCalendarSystemChange,
         onDateFormatChange,
         onDensityChange,
@@ -349,6 +370,8 @@ export function useSettingsMainPage({
         onWeekStartChange,
         onWindowDecorationsChange,
         showCloseBehavior: isTauri,
+        showQuickAddWindowSize: isTauri,
+        quickAddWindowSize,
         showCalendarSystem,
         showLaunchAtStartup: isTauri,
         showTaskAge,

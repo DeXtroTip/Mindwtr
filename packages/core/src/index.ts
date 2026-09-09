@@ -85,6 +85,7 @@ export * from './undo-task-completion';
 export * from './uuid';
 export * from './date';
 export * from './quick-add';
+export * from './quick-add-window-size';
 export * from './area-filter';
 export * from './area-utils';
 export * from './calendar-scheduling';

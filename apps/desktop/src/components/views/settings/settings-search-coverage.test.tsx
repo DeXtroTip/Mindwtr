@@ -101,6 +101,9 @@ const mainProps: Parameters<typeof SettingsMainPage>[0] = {
     onOpenHelp: noop,
     // Window behavior only exists in the desktop shell (decorations are Linux).
     showWindowDecorations: true,
+    showQuickAddWindowSize: true,
+    quickAddWindowSize: 'default',
+    onQuickAddWindowSizeChange: noop,
     showCloseBehavior: true,
     showLaunchAtStartup: true,
     showTrayToggle: true,

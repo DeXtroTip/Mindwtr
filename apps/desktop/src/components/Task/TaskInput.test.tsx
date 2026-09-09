@@ -3,7 +3,7 @@ import { act, createEvent, fireEvent, render, waitFor } from '@testing-library/r
 import { describe, expect, it, vi } from 'vitest';
 import type { Project } from '@mindwtr/core';
 
-import { TaskInput } from './TaskInput';
+import { TaskInput, resolveDropdownPlacement } from './TaskInput';
 
 const buildProject = (title: string, status: Project['status'] = 'active'): Project => ({
     id: title.toLowerCase().replace(/\s+/g, '-'),
@@ -456,6 +456,30 @@ describe('TaskInput autocomplete', () => {
         } finally {
             delete (HTMLElement.prototype as { scrollIntoView?: unknown }).scrollIntoView;
         }
+    });
+
+    describe('resolveDropdownPlacement', () => {
+        it('opens below with the full height when space allows', () => {
+            expect(resolveDropdownPlacement({ top: 200, bottom: 230 }, 540, 10)).toEqual({
+                dropUp: false,
+                maxHeight: 240,
+            });
+        });
+
+        it('clamps below to the viewport instead of overflowing it', () => {
+            // Input in the compact 420px popup: the old fixed 240px list would
+            // spill past the native window edge here.
+            const placement = resolveDropdownPlacement({ top: 150, bottom: 180 }, 420, 10);
+            expect(placement.dropUp).toBe(false);
+            expect(placement.maxHeight).toBeLessThan(240);
+            expect(180 + 12 + placement.maxHeight).toBeLessThanOrEqual(420);
+        });
+
+        it('flips above when there is more room above the input', () => {
+            const placement = resolveDropdownPlacement({ top: 450, bottom: 480 }, 540, 10);
+            expect(placement.dropUp).toBe(true);
+            expect(placement.maxHeight).toBeLessThanOrEqual(450 - 12);
+        });
     });
 
     it('undoes task title edits with Ctrl+Z', async () => {
