@@ -4,7 +4,7 @@ import {
     GLOBAL_QUICK_ADD_SHORTCUT_DISABLED,
     getGlobalQuickAddShortcutOptions,
 } from '../../../lib/global-quick-add-shortcut';
-import { normalizeWeekStartSetting, resolveFeatureFlags, useTaskStore } from '@mindwtr/core';
+import { normalizeWeekStartSetting, resolveFeatureFlags, useTaskStore, type QuickAddWindowSize } from '@mindwtr/core';
 import type { DesktopThemeMode } from '../../../lib/theme';
 import { useEffect, useRef, useState } from 'react';
 import { Check, ChevronDown } from 'lucide-react';
@@ -158,6 +158,9 @@ export type SettingsKeyboardWindowProps = {
     showWindowDecorations?: boolean;
     windowDecorationsEnabled?: boolean;
     onWindowDecorationsChange?: (enabled: boolean) => void;
+    showQuickAddWindowSize?: boolean;
+    quickAddWindowSize?: QuickAddWindowSize;
+    onQuickAddWindowSizeChange?: (size: QuickAddWindowSize) => void;
     showCloseBehavior?: boolean;
     closeBehavior?: 'ask' | 'tray' | 'quit';
     onCloseBehaviorChange?: (behavior: 'ask' | 'tray' | 'quit') => void;

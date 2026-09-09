@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { ChevronDown, ChevronRight } from 'lucide-react';
+import type { QuickAddWindowSize } from '@mindwtr/core';
 import type { SettingsLabels } from './labels';
 import type { LocalApiServerStatus } from '../../../lib/local-api-server';
 import type { DesktopRenderingConfig } from '../../../lib/desktop-rendering';
@@ -50,6 +51,9 @@ export function SettingsAdvancedPage({
     showWindowDecorations = false,
     windowDecorationsEnabled = true,
     onWindowDecorationsChange,
+    showQuickAddWindowSize = false,
+    quickAddWindowSize = 'default',
+    onQuickAddWindowSizeChange,
     showCloseBehavior = false,
     closeBehavior = 'ask',
     onCloseBehaviorChange,
@@ -107,6 +111,20 @@ export function SettingsAdvancedPage({
                             aria-label={t.windowDecorations}
                             onCheckedChange={() => onWindowDecorationsChange?.(!windowDecorationsEnabled)}
                         />
+                    </SettingRow>
+                )}
+                {showQuickAddWindowSize && (
+                    <SettingRow padded settingsKey="quickAddWindowSize" title={t.quickAddWindowSize} description={t.quickAddWindowSizeDesc}>
+                        <select
+                            aria-label={t.quickAddWindowSize}
+                            value={quickAddWindowSize}
+                            onChange={(event) => onQuickAddWindowSizeChange?.(event.target.value as QuickAddWindowSize)}
+                            className="rounded-md border border-border bg-muted/50 px-2.5 py-1.5 text-[13px] text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40"
+                        >
+                            <option value="compact">{t.quickAddWindowSizeCompact}</option>
+                            <option value="default">{t.quickAddWindowSizeDefault}</option>
+                            <option value="large">{t.quickAddWindowSizeLarge}</option>
+                        </select>
                     </SettingRow>
                 )}
                 {showCloseBehavior && (

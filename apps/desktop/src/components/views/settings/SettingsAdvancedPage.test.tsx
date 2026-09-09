@@ -62,6 +62,33 @@ describe('SettingsAdvancedPage', () => {
         expect(onLaunchAtStartupChange).toHaveBeenCalledWith(true);
     });
 
+    it('offers quick add window sizes when enabled', () => {
+        const onQuickAddWindowSizeChange = vi.fn();
+        const hidden = render(<SettingsAdvancedPage {...baseProps} />);
+        fireEvent.click(hidden.getByRole('button', { name: 'Keyboard and window' }));
+        expect(hidden.queryByRole('combobox', { name: 'Quick add window size' })).not.toBeInTheDocument();
+        hidden.unmount();
+
+        const { getByRole } = render(
+            <SettingsAdvancedPage
+                {...baseProps}
+                showQuickAddWindowSize
+                quickAddWindowSize="large"
+                onQuickAddWindowSizeChange={onQuickAddWindowSizeChange}
+            />,
+        );
+        fireEvent.click(getByRole('button', { name: 'Keyboard and window' }));
+
+        const select = getByRole('combobox', { name: 'Quick add window size' });
+        expect(select).toHaveValue('large');
+
+        fireEvent.change(select, {
+            target: { value: 'compact' },
+        });
+
+        expect(onQuickAddWindowSizeChange).toHaveBeenCalledWith('compact');
+    });
+
     it('toggles the local API server', () => {
         const onLocalApiToggle = vi.fn();
         const { getByRole } = render(

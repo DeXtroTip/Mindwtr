@@ -641,6 +641,9 @@ export function SettingsView({ initialPage, onboardingHintPage, onResumeOnboardi
           showWindowDecorations={mainPageProps.showWindowDecorations}
           windowDecorationsEnabled={mainPageProps.windowDecorationsEnabled}
           onWindowDecorationsChange={mainPageProps.onWindowDecorationsChange}
+          showQuickAddWindowSize={mainPageProps.showQuickAddWindowSize}
+          quickAddWindowSize={mainPageProps.quickAddWindowSize}
+          onQuickAddWindowSizeChange={mainPageProps.onQuickAddWindowSizeChange}
           showCloseBehavior={mainPageProps.showCloseBehavior}
           closeBehavior={mainPageProps.closeBehavior}
           onCloseBehaviorChange={mainPageProps.onCloseBehaviorChange}

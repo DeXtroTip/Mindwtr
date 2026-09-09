@@ -111,7 +111,9 @@ export const LOCALES = {
         mode: 'overrides',
         native: 'Tiếng Việt',
         nonLatin: false,
-        translatedKeyFloor: 2294,
+        // Re-pinned 2315 -> 2409, the count viOverrides actually translates once main's
+        // own Vietnamese strings landed on top of this branch's floor of 2315.
+        translatedKeyFloor: 2409,
     },
     zh: {
         loadSync: () => require('./locales/zh-Hans') as typeof import('./locales/zh-Hans'),
@@ -278,8 +280,8 @@ export const LOCALES = {
         // (E-Ink, Material 3, Base URL, quick-add token syntax).
         // Include the newly translated sandbox and Reference strings; keep the native translation above
         // the mixed-English brand-name check threshold as the English dictionary grows.
-        // Includes subsequent shipped translations and the UI simplification labels.
-        translatedKeyFloor: 2421,
+        // Re-pinned 2421 -> 2425, the count koOverrides actually translates.
+        translatedKeyFloor: 2425,
     },
     it: {
         loadSync: () => require('./locales/it') as typeof import('./locales/it'),

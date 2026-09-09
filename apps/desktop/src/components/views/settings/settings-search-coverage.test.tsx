@@ -382,6 +382,9 @@ const advancedProps: Parameters<typeof SettingsAdvancedPage>[0] = {
     onKeybindingStyleChange: noop,
     // Window behavior only exists in the desktop shell (decorations are Linux).
     showWindowDecorations: true,
+    showQuickAddWindowSize: true,
+    quickAddWindowSize: 'default',
+    onQuickAddWindowSizeChange: noop,
     showCloseBehavior: true,
     showLaunchAtStartup: true,
     showTrayToggle: true,
