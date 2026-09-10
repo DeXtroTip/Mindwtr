@@ -279,7 +279,10 @@ export const LOCALES = {
         // Include the newly translated sandbox and Reference strings; keep the native translation above
         // the mixed-English brand-name check threshold as the English dictionary grows.
         // Includes subsequent shipped translations and the UI simplification labels.
-        translatedKeyFloor: 2402,
+        // Re-pinned 2402 -> 2413, the count ko actually translates: the OpenCode Go strings
+        // this branch adds put the ratio at 90.8% at 2402, a few English keys above the
+        // mixed-English ceiling.
+        translatedKeyFloor: 2413,
     },
     it: {
         loadSync: () => require('./locales/it') as typeof import('./locales/it'),
