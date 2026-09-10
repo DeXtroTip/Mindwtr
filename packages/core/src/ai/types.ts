@@ -2,9 +2,12 @@ import type { TimeEstimate } from '../types';
 
 export type AIProviderId = 'gemini' | 'openai' | 'anthropic' | 'opencode-go';
 
+// Weakest to strongest, matching REASONING_EFFORT_ORDER in reasoning-effort.ts.
 // 'minimal' minimizes reasoning tokens for the fastest time-to-first-token on
-// latency-sensitive paths (e.g. the copilot type-ahead) on GPT-5 reasoning models.
-export type AIReasoningEffort = 'minimal' | 'low' | 'medium' | 'high';
+// latency-sensitive paths (e.g. the copilot type-ahead) on GPT-5 reasoning
+// models; 'xhigh' and 'max' are the top tiers third-party OpenCode Go models
+// (Kimi K3, DeepSeek, GLM) name instead of 'high'.
+export type AIReasoningEffort = 'none' | 'minimal' | 'low' | 'medium' | 'high' | 'xhigh' | 'max';
 
 export type AIRequestExtraBodyParams = Record<string, unknown>;
 

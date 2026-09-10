@@ -107,6 +107,21 @@ describe('ai-config endpoint mapping', () => {
         expect(config.reasoningEffort).toBe('low');
     });
 
+    it('drops the copilot effort when the OpenCode Go copilot model has no cheap tier', () => {
+        // kimi-k3's only tier is max, which would make every keystroke slow.
+        const expensive = buildCopilotConfig(
+            createSettings({ provider: 'opencode-go', copilotModel: 'kimi-k3' }),
+            'oc-key',
+        );
+        expect(expensive.reasoningEffort).toBeUndefined();
+
+        const tunable = buildCopilotConfig(
+            createSettings({ provider: 'opencode-go', copilotModel: 'glm-5.3-flash' }),
+            'oc-key',
+        );
+        expect(tunable.reasoningEffort).toBe('low');
+    });
+
     it('uses gpt-5.6-luna defaults and fixed behavior for opencode-go', () => {
         const config = buildAIConfig(
             createSettings({ provider: 'opencode-go', baseUrl: 'http://localhost:11434/v1' }),

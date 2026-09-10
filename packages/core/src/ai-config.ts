@@ -1,6 +1,6 @@
 import type { AppData } from './types';
 import type { AIProviderConfig, AIProviderId, AIRequestExtraBodyParams } from './ai/types';
-import { COPILOT_REASONING_EFFORT, DEFAULT_ANTHROPIC_THINKING_BUDGET, DEFAULT_GEMINI_THINKING_BUDGET, DEFAULT_REASONING_EFFORT, getDefaultAIConfig, getDefaultCopilotModel } from './ai/catalog';
+import { DEFAULT_ANTHROPIC_THINKING_BUDGET, DEFAULT_GEMINI_THINKING_BUDGET, DEFAULT_REASONING_EFFORT, getDefaultAIConfig, getDefaultCopilotModel, resolveCopilotReasoningEffort } from './ai/catalog';
 
 const AI_KEY_PREFIX = 'mindwtr-ai-key';
 const OPENAI_CHAT_COMPLETIONS_PATH = '/chat/completions';
@@ -157,11 +157,15 @@ export function buildCopilotConfig(settings: AppData['settings'], apiKey: string
         ? normalizeOpenAIExtraBodyParams(settings.ai?.openAIExtraBodyParams)
         : undefined;
     const trimmedSessionId = String(sessionId ?? '').trim();
+    const copilotModel = settings.ai?.copilotModel ?? getDefaultCopilotModel(provider);
+    // Omitted entirely when the copilot model has no cheap tier: sending a strong
+    // tier here would make every keystroke slow and expensive.
+    const copilotReasoningEffort = resolveCopilotReasoningEffort(provider, copilotModel);
     return {
         provider,
         apiKey,
-        model: settings.ai?.copilotModel ?? getDefaultCopilotModel(provider),
-        reasoningEffort: COPILOT_REASONING_EFFORT,
+        model: copilotModel,
+        ...(copilotReasoningEffort ? { reasoningEffort: copilotReasoningEffort } : {}),
         timeoutMs: resolveAIRequestTimeoutSeconds(settings.ai?.requestTimeoutSeconds) * 1000,
         ...(provider === 'gemini' ? { thinkingBudget: DEFAULT_GEMINI_THINKING_BUDGET } : {}),
         ...(provider === 'anthropic' ? { thinkingBudget: DEFAULT_ANTHROPIC_THINKING_BUDGET } : {}),

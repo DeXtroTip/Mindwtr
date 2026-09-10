@@ -149,6 +149,109 @@ describe('opencode-go provider contract', () => {
         expect(readRequest(fetchMock, 1).headers['x-opencode-session']).toBe('stable-session');
     });
 
+    it('sends the tier the selected model accepts, clamped from the stored one', async () => {
+        const fetchMock = vi.fn(async () => mockSuccess(clarifyPayload));
+        globalThis.fetch = fetchMock as unknown as typeof fetch;
+
+        await createOpenCodeGoProvider({
+            provider: 'opencode-go',
+            apiKey: 'test-key',
+            // glm-5.3-flash takes low/high/max; medium is not one of them.
+            model: 'glm-5.3-flash',
+            reasoningEffort: 'medium',
+            sessionId: 'session-123',
+        }).clarifyTask({ title: 'Plan trip' });
+
+        const request = readRequest(fetchMock);
+        expect(request.body.reasoning_effort).toBe('low');
+        // glm models accept temperature.
+        expect(request.body.temperature).toBe(0.2);
+    });
+
+    it('sends max effort for a model whose only tier is max, without temperature', async () => {
+        const fetchMock = vi.fn(async () => mockSuccess(clarifyPayload));
+        globalThis.fetch = fetchMock as unknown as typeof fetch;
+
+        await createOpenCodeGoProvider({
+            provider: 'opencode-go',
+            apiKey: 'test-key',
+            model: 'kimi-k3',
+            reasoningEffort: 'low',
+            sessionId: 'session-123',
+        }).clarifyTask({ title: 'Plan trip' });
+
+        const request = readRequest(fetchMock);
+        expect(request.body.reasoning_effort).toBe('max');
+        expect(request.body.temperature).toBeUndefined();
+    });
+
+    it('omits reasoning_effort for a model with no effort control', async () => {
+        const fetchMock = vi.fn(async () => mockSuccess(clarifyPayload));
+        globalThis.fetch = fetchMock as unknown as typeof fetch;
+
+        await createOpenCodeGoProvider({
+            provider: 'opencode-go',
+            apiKey: 'test-key',
+            model: 'kimi-k2.6',
+            reasoningEffort: 'high',
+            sessionId: 'session-123',
+        }).clarifyTask({ title: 'Plan trip' });
+
+        const request = readRequest(fetchMock);
+        expect(request.body.reasoning_effort).toBeUndefined();
+        expect(request.body.temperature).toBe(0.2);
+    });
+
+    it('retries without reasoning_effort when the upstream rejects the parameter', async () => {
+        const fetchMock = vi.fn(async () => {
+            if (fetchMock.mock.calls.length === 1) {
+                return new Response(
+                    JSON.stringify({ error: { message: "Unsupported parameter: 'reasoning_effort' is not supported with this model." } }),
+                    { status: 400, headers: { 'Content-Type': 'application/json' } },
+                );
+            }
+            return mockSuccess(clarifyPayload);
+        });
+        globalThis.fetch = fetchMock as unknown as typeof fetch;
+
+        const provider = createOpenCodeGoProvider({
+            provider: 'opencode-go',
+            apiKey: 'test-key',
+            model: 'glm-5.3-flash',
+            reasoningEffort: 'high',
+            sessionId: 'session-123',
+        });
+
+        await expect(provider.clarifyTask({ title: 'Plan trip' })).resolves.toEqual(clarifyPayload);
+        expect(fetchMock).toHaveBeenCalledTimes(2);
+        expect(readRequest(fetchMock, 0).body.reasoning_effort).toBe('high');
+        expect(readRequest(fetchMock, 1).body.reasoning_effort).toBeUndefined();
+        // The retry keeps everything else that made the first request valid.
+        expect(readRequest(fetchMock, 1).body.response_format).toEqual(readRequest(fetchMock, 0).body.response_format);
+        expect(readRequest(fetchMock, 1).headers['x-opencode-session']).toBe('session-123');
+    });
+
+    it('keeps a 400 that is unrelated to reasoning_effort as a failure', async () => {
+        const fetchMock = vi.fn(async () =>
+            new Response(JSON.stringify({ error: { message: 'context length exceeded' } }), {
+                status: 400,
+                headers: { 'Content-Type': 'application/json' },
+            }),
+        );
+        globalThis.fetch = fetchMock as unknown as typeof fetch;
+
+        const provider = createOpenCodeGoProvider({
+            provider: 'opencode-go',
+            apiKey: 'test-key',
+            model: 'glm-5.3-flash',
+            reasoningEffort: 'high',
+            sessionId: 'session-123',
+        });
+
+        await expect(provider.clarifyTask({ title: 'Plan trip' })).rejects.toThrow(/OpenCode Go request failed \(400\)/);
+        expect(fetchMock).toHaveBeenCalledTimes(1);
+    });
+
     it('translates auth, model, and rate-limit errors', async () => {
         const cases = [
             { status: 401, message: 'OpenCode Go API key is invalid' },

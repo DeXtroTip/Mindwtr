@@ -1,4 +1,5 @@
 import type { AIProvider, AIProviderConfig } from '../types';
+import { isOpenAIReasoningModel } from '../reasoning-effort';
 import {
     createOpenAICompatibleProvider,
     type OpenAICompatibleErrorInfo,
@@ -64,5 +65,15 @@ export function createOpenAIProvider(config: AIProviderConfig): AIProvider {
         buildError: (info, { url }) => buildOpenAIError(info, url === OPENAI_BASE_URL),
         preferJsonSchema: (url) => url === OPENAI_BASE_URL,
         getExtraBodyParams: (cfg) => cfg.extraBodyParams ?? {},
+        resolveRequestPolicy: (cfg) => {
+            // GPT-5 family and o-series ids reject an explicit temperature and take a
+            // graded effort; custom OpenAI-compatible endpoints and older official
+            // models keep the pre-existing behavior inferred from the id.
+            const reasoningModel = isOpenAIReasoningModel(cfg.model);
+            return {
+                reasoningEffort: reasoningModel ? cfg.reasoningEffort : undefined,
+                omitTemperature: reasoningModel,
+            };
+        },
     });
 }

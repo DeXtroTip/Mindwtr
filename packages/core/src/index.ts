@@ -148,6 +148,7 @@ export * from './ai/ai-service';
 export * from './ai/utils';
 export * from './ai/types';
 export * from './ai/catalog';
+export * from './ai/reasoning-effort';
 export * from './ai/model-list';
 export * from './ai-config';
 export * from './sqlite-schema';

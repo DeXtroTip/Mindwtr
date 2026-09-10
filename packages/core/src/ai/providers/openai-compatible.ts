@@ -1,4 +1,4 @@
-import type { AIProvider, AIProviderConfig, BreakdownInput, BreakdownResponse, ClarifyInput, ClarifyResponse, CopilotInput, CopilotResponse, ReviewAnalysisInput, ReviewAnalysisResponse, AIRequestOptions } from '../types';
+import type { AIProvider, AIProviderConfig, AIReasoningEffort, BreakdownInput, BreakdownResponse, ClarifyInput, ClarifyResponse, CopilotInput, CopilotResponse, ReviewAnalysisInput, ReviewAnalysisResponse, AIRequestOptions } from '../types';
 import { buildBreakdownPrompt, buildClarifyPrompt, buildCopilotPrompt, buildReviewAnalysisPrompt } from '../prompts';
 import {
     fetchTextWithTimeout,
@@ -20,15 +20,6 @@ const RETRYABLE_STATUSES = new Set([408, 429, 500, 502, 503, 504]);
 
 export const resolveCompatibleTimeoutMs = (value?: number): number =>
     typeof value === 'number' && Number.isFinite(value) && value > 0 ? value : OPENAI_COMPATIBLE_DEFAULT_TIMEOUT_MS;
-
-// OpenAI reasoning models such as the GPT-5 family and o-series do not support
-// configurable sampling temperature. Some models/endpoints reject explicit
-// temperature values with 400 unsupported_parameter or unsupported_value errors.
-// Detect them so we omit temperature and rely on the model default.
-export const isReasoningModel = (model: string): boolean => {
-    const id = model.trim().toLowerCase();
-    return id.startsWith('gpt-5') || /^o\d+(?:-|$)/.test(id);
-};
 
 export interface OpenAICompatibleResponseSchema {
     name: string;
@@ -220,6 +211,24 @@ export const requiresJsonSchemaResponseFormat = (info: OpenAICompatibleErrorInfo
         && (haystack.includes('must') || haystack.includes('only'));
 };
 
+// A model that takes no reasoning parameter at all answers 400 naming the field
+// (rather than rejecting one tier), which is how a mis-guessed per-model profile
+// shows up: an OpenCode Go id whose upstream has no effort control.
+export const isUnsupportedReasoningEffortError = (info: OpenAICompatibleErrorInfo): boolean => {
+    if (info.status !== 400) return false;
+    return /reasoning[_\s-]?effort/i.test(`${info.message} ${info.code} ${info.type} ${info.raw}`);
+};
+
+// What the request should carry for reasoning, resolved per model by the policy:
+// the effort to send (already narrowed to what the model accepts) and whether an
+// explicit temperature is allowed. Some models reject a temperature value with a
+// 400 unsupported_parameter or unsupported_value error, so their policy sets
+// omitTemperature and the request relies on the model default instead.
+export interface OpenAICompatibleRequestPolicy {
+    reasoningEffort?: AIReasoningEffort;
+    omitTemperature: boolean;
+}
+
 export interface OpenAICompatiblePolicy {
     label: string;
     rateLimitKey: string;
@@ -230,6 +239,7 @@ export interface OpenAICompatiblePolicy {
     buildError: (info: OpenAICompatibleErrorInfo, context: { url: string; preferJsonSchema: boolean }) => Error;
     preferJsonSchema: (url: string) => boolean;
     getExtraBodyParams: (config: AIProviderConfig) => Record<string, unknown>;
+    resolveRequestPolicy: (config: AIProviderConfig) => OpenAICompatibleRequestPolicy;
 }
 
 async function requestCompatible(
@@ -243,10 +253,8 @@ async function requestCompatible(
     const preferJsonSchema = policy.preferJsonSchema(url);
     const apiKey = policy.resolveApiKey(config);
     policy.validateConfig(config, url, apiKey);
-    const reasoningModel = isReasoningModel(config.model);
-    const reasoningEffort = reasoningModel && config.reasoningEffort
-        ? config.reasoningEffort
-        : undefined;
+    const requestPolicy = policy.resolveRequestPolicy(config);
+    const reasoningEffort = requestPolicy.reasoningEffort;
 
     const extraBodyParams = policy.getExtraBodyParams(config);
     // An explicit temperature in extraBodyParams always wins so users can
@@ -276,7 +284,7 @@ async function requestCompatible(
         // Reasoning models only support the default temperature; sending an
         // explicit value returns a 400 unsupported_value error. Skip our
         // default for them, but never override a user-supplied temperature.
-        ...(hasExplicitTemperature || reasoningModel ? {} : { temperature: 0.2 }),
+        ...(hasExplicitTemperature || requestPolicy.omitTemperature ? {} : { temperature: 0.2 }),
         response_format: responseFormat,
         ...(reasoningEffort ? { reasoning_effort: reasoningEffort } : {}),
     };
@@ -325,17 +333,31 @@ async function requestCompatible(
     };
 
     let response = await dispatch(body);
+    let activeResponseFormat: unknown = responseFormat;
 
     // Negotiate the opposite structured-output mode when an endpoint names the
     // one it requires: older official models use json_object; LM Studio uses json_schema.
     if (!response.ok && jsonSchemaResponseFormat && response.status === 400) {
         const info = await readOpenAICompatibleErrorInfo(response);
         if (preferJsonSchema && isUnsupportedResponseFormatError(info)) {
-            response = await dispatch({ ...body, response_format: { type: 'json_object' } });
+            activeResponseFormat = { type: 'json_object' };
+            response = await dispatch({ ...body, response_format: activeResponseFormat });
         } else if (!preferJsonSchema && requiresJsonSchemaResponseFormat(info)) {
-            response = await dispatch({ ...body, response_format: jsonSchemaResponseFormat });
-        } else {
-            throw policy.buildError(info, { url, preferJsonSchema });
+            activeResponseFormat = jsonSchemaResponseFormat;
+            response = await dispatch({ ...body, response_format: activeResponseFormat });
+        }
+    }
+
+    // One more 400 case, after the format negotiation: a model that takes no
+    // reasoning parameter at all. Retry the same request without it so a wrongly
+    // guessed per-model profile degrades to the provider default instead of
+    // failing the operation outright.
+    if (!response.ok && response.status === 400 && reasoningEffort) {
+        const info = await readOpenAICompatibleErrorInfo(response);
+        if (isUnsupportedReasoningEffortError(info)) {
+            const bodyWithoutReasoningEffort: Record<string, unknown> = { ...body, response_format: activeResponseFormat };
+            delete bodyWithoutReasoningEffort.reasoning_effort;
+            response = await dispatch(bodyWithoutReasoningEffort);
         }
     }
 

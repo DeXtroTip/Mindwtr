@@ -1,4 +1,5 @@
 import type { AIProvider, AIProviderConfig } from '../types';
+import { clampReasoningEffort, getOpenCodeGoReasoningProfile } from '../reasoning-effort';
 import { generateUUID } from '../../uuid';
 import {
     createOpenAICompatibleProvider,
@@ -68,5 +69,18 @@ export function createOpenCodeGoProvider(config: AIProviderConfig): AIProvider {
         buildError: (info) => buildOpenCodeGoError(info),
         preferJsonSchema: () => true,
         getExtraBodyParams: () => ({}),
+        resolveRequestPolicy: (cfg) => {
+            // The endpoint is fixed, so which parameter the model takes comes from
+            // the vendored profile: only models listing a tier get reasoning_effort,
+            // narrowed to one they accept, and the ones that reject temperature
+            // (GPT 5.6 Luna, Kimi K3) keep the provider default.
+            const profile = getOpenCodeGoReasoningProfile(cfg.model);
+            return {
+                reasoningEffort: cfg.reasoningEffort
+                    ? clampReasoningEffort(cfg.reasoningEffort, profile.efforts)
+                    : undefined,
+                omitTemperature: !profile.supportsTemperature,
+            };
+        },
     });
 }

@@ -1,3 +1,4 @@
+import { getOpenCodeGoReasoningProfile } from './reasoning-effort';
 import type { AIProviderConfig, AIProviderId, AIReasoningEffort } from './types';
 
 // GPT-5.6 family (current as of 2026-07-31): terra balances intelligence and
@@ -140,4 +141,21 @@ export function getDefaultCopilotModel(provider: AIProviderId): string {
 
 export function getCopilotModelOptions(provider: AIProviderId): string[] {
     return getModelOptions(provider);
+}
+
+/**
+ * Effort for the type-ahead copilot, which runs on every debounced keystroke and
+ * therefore wants the cheapest tier. OpenCode Go models whose lowest tier is
+ * already strong (Kimi K3 accepts only `max`) get no effort field at all rather
+ * than being upgraded into a slow, expensive mode; every other provider keeps the
+ * low tier, which its transport then gates on the model.
+ */
+export function resolveCopilotReasoningEffort(
+    provider: AIProviderId,
+    model: string,
+): AIReasoningEffort | undefined {
+    if (provider !== 'opencode-go') return COPILOT_REASONING_EFFORT;
+    return getOpenCodeGoReasoningProfile(model).efforts.includes(COPILOT_REASONING_EFFORT)
+        ? COPILOT_REASONING_EFFORT
+        : undefined;
 }

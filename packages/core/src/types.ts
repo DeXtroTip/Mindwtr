@@ -476,9 +476,10 @@ export interface AiSettings {
     model?: string;
     openAIExtraBodyParams?: Record<string, unknown>;
     // Mirrors AIReasoningEffort (kept inline to avoid a types <-> ai/types import cycle).
-    // 'minimal' is used internally for the low-latency copilot path; the main-model
-    // settings UI exposes low/medium/high.
-    reasoningEffort?: 'minimal' | 'low' | 'medium' | 'high';
+    // 'minimal' is used internally for the low-latency copilot path; the OpenAI
+    // provider's settings UI exposes low/medium/high, and OpenCode Go exposes the
+    // tiers the selected model accepts (see getReasoningEffortOptions).
+    reasoningEffort?: 'none' | 'minimal' | 'low' | 'medium' | 'high' | 'xhigh' | 'max';
     thinkingBudget?: number;
     copilotModel?: string;
     requestTimeoutSeconds?: number;
