@@ -345,6 +345,12 @@ const aiProps: Parameters<typeof SettingsAiPage>[0] = {
     aiCopilotOptions: ['gpt-4o-mini'],
     aiRequestTimeoutSeconds: 120,
     aiReasoningEffort: 'medium',
+    aiReasoningOptions: [
+        { value: 'low', label: 'Low' },
+        { value: 'medium', label: 'Medium' },
+        { value: 'high', label: 'High' },
+    ],
+    aiReasoningHint: 'Used by GPT-5 models.',
     aiThinkingBudget: 1024,
     anthropicThinkingEnabled: true,
     aiApiKey: '',

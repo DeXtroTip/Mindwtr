@@ -45,10 +45,6 @@ type Labels = {
     aiConsentCancel: string;
     aiConsentAgree: string;
     aiReasoning: string;
-    aiReasoningHint: string;
-    aiEffortLow: string;
-    aiEffortMedium: string;
-    aiEffortHigh: string;
     aiThinkingEnable: string;
     aiThinkingEnableDesc: string;
     aiThinkingBudget: string;
@@ -136,6 +132,8 @@ type SettingsAiPageProps = {
     aiCopilotOptions: string[];
     aiRequestTimeoutSeconds: number;
     aiReasoningEffort: AIReasoningEffort;
+    aiReasoningOptions: { value: AIReasoningEffort; label: string }[];
+    aiReasoningHint: string;
     aiThinkingBudget: number;
     anthropicThinkingEnabled: boolean;
     anthropicThinkingOptions: ThinkingOption[];
@@ -179,6 +177,8 @@ export function SettingsAiPage({
     aiCopilotOptions,
     aiRequestTimeoutSeconds,
     aiReasoningEffort,
+    aiReasoningOptions,
+    aiReasoningHint,
     aiThinkingBudget,
     anthropicThinkingEnabled,
     anthropicThinkingOptions,
@@ -378,17 +378,21 @@ export function SettingsAiPage({
                             </SettingRow>
 
                             {(aiProvider === 'openai' || aiProvider === 'opencode-go') && (
-                                <SettingRow settingsKey="aiReasoning" title={t.aiReasoning} description={t.aiReasoningHint}>
-                                    <select
-                                        aria-label={t.aiReasoning}
-                                        value={aiReasoningEffort}
-                                        onChange={(e) => onUpdateAISettings({ reasoningEffort: e.target.value as AIReasoningEffort })}
-                                        className="text-sm bg-muted/50 text-foreground border border-border rounded px-2 py-1 hover:bg-muted focus:outline-none focus:ring-2 focus:ring-primary/40"
-                                    >
-                                        <option value="low">{t.aiEffortLow}</option>
-                                        <option value="medium">{t.aiEffortMedium}</option>
-                                        <option value="high">{t.aiEffortHigh}</option>
-                                    </select>
+                                <SettingRow settingsKey="aiReasoning" title={t.aiReasoning} description={aiReasoningHint}>
+                                    {aiReasoningOptions.length > 0 && (
+                                        <select
+                                            aria-label={t.aiReasoning}
+                                            value={aiReasoningEffort}
+                                            onChange={(e) => onUpdateAISettings({ reasoningEffort: e.target.value as AIReasoningEffort })}
+                                            className="text-sm bg-muted/50 text-foreground border border-border rounded px-2 py-1 hover:bg-muted focus:outline-none focus:ring-2 focus:ring-primary/40"
+                                        >
+                                            {aiReasoningOptions.map((option) => (
+                                                <option key={option.value} value={option.value}>
+                                                    {option.label}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    )}
                                 </SettingRow>
                             )}
 

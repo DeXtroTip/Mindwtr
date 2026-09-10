@@ -37,10 +37,6 @@ const t = {
     aiConsentCancel: 'Cancel',
     aiConsentAgree: 'Agree',
     aiReasoning: 'Reasoning effort',
-    aiReasoningHint: 'Used by GPT-5 models.',
-    aiEffortLow: 'Low',
-    aiEffortMedium: 'Medium',
-    aiEffortHigh: 'High',
     aiThinkingEnable: 'Enable thinking',
     aiThinkingEnableDesc: 'Use extended reasoning for complex tasks.',
     aiThinkingBudget: 'Thinking budget',
@@ -102,6 +98,12 @@ const baseProps: Parameters<typeof SettingsAiPage>[0] = {
     aiCopilotOptions: ['gpt-4o-mini'],
     aiRequestTimeoutSeconds: 30,
     aiReasoningEffort: 'medium',
+    aiReasoningOptions: [
+        { value: 'low', label: 'Low' },
+        { value: 'medium', label: 'Medium' },
+        { value: 'high', label: 'High' },
+    ],
+    aiReasoningHint: 'Used by GPT-5 models.',
     aiThinkingBudget: 0,
     anthropicThinkingEnabled: false,
     anthropicThinkingOptions: [{ value: 0, label: 'Off' }],
@@ -187,6 +189,45 @@ describe('SettingsAiPage', () => {
         expect(queryByText('Reasoning effort')).toBeInTheDocument();
         expect(queryByText('Custom OpenAI-compatible base URL')).not.toBeInTheDocument();
         expect(queryByText('Extra request parameters')).not.toBeInTheDocument();
+    });
+
+    it('renders only the reasoning tiers the OpenCode Go model accepts', () => {
+        const onUpdateAISettings = vi.fn();
+        const { getByRole, queryByRole } = render(
+            <SettingsAiPage
+                {...baseProps}
+                aiProvider="opencode-go"
+                aiModel="kimi-k3"
+                aiReasoningEffort="max"
+                aiReasoningOptions={[{ value: 'max', label: 'Max' }]}
+                aiReasoningHint="Levels follow the selected model."
+                onUpdateAISettings={onUpdateAISettings}
+            />,
+        );
+
+        fireEvent.click(getByRole('button', { name: /Enable AI assistant/i }));
+        const reasoning = getByRole('combobox', { name: 'Reasoning effort' }) as HTMLSelectElement;
+        expect([...reasoning.options].map((option) => option.value)).toEqual(['max']);
+        expect(queryByRole('option', { name: 'Low' })).not.toBeInTheDocument();
+
+        fireEvent.change(reasoning, { target: { value: 'max' } });
+        expect(onUpdateAISettings).toHaveBeenCalledWith({ reasoningEffort: 'max' });
+    });
+
+    it('shows the hint without a control for a model with no tiers', () => {
+        const { getByRole, getByText, queryByRole } = render(
+            <SettingsAiPage
+                {...baseProps}
+                aiProvider="opencode-go"
+                aiModel="kimi-k2.6"
+                aiReasoningOptions={[]}
+                aiReasoningHint="The selected model has no reasoning level to set."
+            />,
+        );
+
+        fireEvent.click(getByRole('button', { name: /Enable AI assistant/i }));
+        expect(queryByRole('combobox', { name: 'Reasoning effort' })).not.toBeInTheDocument();
+        expect(getByText('The selected model has no reasoning level to set.')).toBeInTheDocument();
     });
 
     it('warns when a non-OpenAI model is configured without a custom endpoint', () => {

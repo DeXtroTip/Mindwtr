@@ -4,13 +4,17 @@ import {
     DEFAULT_ANTHROPIC_THINKING_BUDGET,
     DEFAULT_GEMINI_THINKING_BUDGET,
     DEFAULT_REASONING_EFFORT,
+    clampReasoningEffort,
     fetchProviderModelsCached,
     getDefaultAIConfig,
     getDefaultCopilotModel,
     getCopilotModelOptions,
     getModelOptions,
+    getReasoningEffortLabelKey,
+    getReasoningEffortOptions,
     mergeModelOptions,
     resolveAIRequestTimeoutSeconds,
+    resolveI18nText,
 } from '@mindwtr/core';
 import { exists, remove, size } from '@tauri-apps/plugin-fs';
 import { join } from '@tauri-apps/api/path';
@@ -60,6 +64,13 @@ type SpeechDownloadProgress = {
     percent?: number | null;
 };
 
+// The OpenCode Go row follows the selected model, so its copy depends on whether
+// that model takes a tier at all; OpenAI keeps the GPT-5 wording its models justify.
+function resolveAiReasoningHintKey(provider: AIProviderId, optionCount: number): string {
+    if (provider !== 'opencode-go') return 'settings.aiReasoningHint';
+    return optionCount > 0 ? 'settings.aiReasoningHintOpenCodeGo' : 'settings.aiReasoningUnsupported';
+}
+
 export function useAiSettings({ isTauri, settings, updateSettings, showSaved, enabled = true }: UseAiSettingsOptions) {
     const [aiKey, setAiKey] = useState<LoadedKey>({ provider: '', value: '' });
     const [speechKey, setSpeechKey] = useState<LoadedKey>({ provider: '', value: '' });
@@ -90,7 +101,19 @@ export function useAiSettings({ isTauri, settings, updateSettings, showSaved, en
     const aiModel = settings?.ai?.model ?? aiDefaults.model;
     const aiBaseUrl = settings?.ai?.baseUrl ?? '';
     const aiOpenAIExtraBodyParams = settings?.ai?.openAIExtraBodyParams;
-    const aiReasoningEffort = (settings?.ai?.reasoningEffort ?? DEFAULT_REASONING_EFFORT) as AIReasoningEffort;
+    const storedReasoningEffort = (settings?.ai?.reasoningEffort ?? DEFAULT_REASONING_EFFORT) as AIReasoningEffort;
+    // The tier is stored once for every model. Offer only what the selected model
+    // takes, and show the tier a request will actually use: an unsupported stored
+    // tier is clamped at request time, so the row must not claim otherwise.
+    const aiReasoningOptions = getReasoningEffortOptions(aiProvider, aiModel).map((value) => ({
+        value,
+        label: resolveI18nText(t, getReasoningEffortLabelKey(value)),
+    }));
+    const aiReasoningEffort = clampReasoningEffort(
+        storedReasoningEffort,
+        aiReasoningOptions.map((option) => option.value),
+    ) ?? storedReasoningEffort;
+    const aiReasoningHint = resolveI18nText(t, resolveAiReasoningHintKey(aiProvider, aiReasoningOptions.length));
     const aiThinkingBudget = settings?.ai?.thinkingBudget ?? aiDefaults.thinkingBudget ?? DEFAULT_GEMINI_THINKING_BUDGET;
     const anthropicThinkingEnabled = aiProvider === 'anthropic' && aiThinkingBudget > 0;
     const aiModelOptions = mergeModelOptions(fetchedChatModels, getModelOptions(aiProvider), aiModel);
@@ -148,11 +171,16 @@ export function useAiSettings({ isTauri, settings, updateSettings, showSaved, en
     }, [saveFailedMessage, settings?.ai, showSaved, updateSettings]);
 
     const handleAIProviderChange = useCallback((provider: AIProviderId) => {
+        const defaults = getDefaultAIConfig(provider);
         updateAISettings({
             provider,
-            model: getDefaultAIConfig(provider).model,
+            model: defaults.model,
             copilotModel: getDefaultCopilotModel(provider),
-            thinkingBudget: getDefaultAIConfig(provider).thinkingBudget,
+            thinkingBudget: defaults.thinkingBudget,
+            // Tiers are provider-specific (OpenCode Go models name none/xhigh/max),
+            // so carrying one across a provider switch would send a level the new
+            // provider's row cannot show. Mobile's applyAIProviderDefaults does the same.
+            reasoningEffort: defaults.reasoningEffort,
         });
     }, [updateAISettings]);
 
@@ -551,6 +579,8 @@ export function useAiSettings({ isTauri, settings, updateSettings, showSaved, en
         aiCopilotOptions,
         aiRequestTimeoutSeconds,
         aiReasoningEffort,
+        aiReasoningOptions,
+        aiReasoningHint,
         aiThinkingBudget,
         anthropicThinkingEnabled,
         aiApiKey,
