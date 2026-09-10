@@ -28,6 +28,7 @@ describe('current model lineup (#985)', () => {
         expect(OPENCODE_GO_DEFAULT_MODEL).toBe('gpt-5.6-luna');
         expect(OPENCODE_GO_COPILOT_DEFAULT_MODEL).toBe('gpt-5.6-luna');
         expect(OPENCODE_GO_MODEL_OPTIONS[0]).toBe('gpt-5.6-luna');
+        expect(OPENCODE_GO_MODEL_OPTIONS).toContain('deepseek-flash');
         expect(getDefaultAIConfig('opencode-go').model).toBe('gpt-5.6-luna');
         expect(getDefaultCopilotModel('opencode-go')).toBe('gpt-5.6-luna');
         expect(getModelOptions('opencode-go')).toEqual(OPENCODE_GO_MODEL_OPTIONS);

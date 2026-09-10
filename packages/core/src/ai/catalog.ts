@@ -41,11 +41,12 @@ export const ANTHROPIC_MODEL_OPTIONS = [
     'claude-opus-4-8',
 ];
 // Curated OpenCode Go fallback (live /models is preferred). All entries
-// support Structured Outputs as of 2026-09-09; gpt-5.6-luna is the default.
+// support Structured Outputs as of 2026-09-10; gpt-5.6-luna is the default.
 export const OPENCODE_GO_MODEL_OPTIONS = [
     OPENCODE_GO_DEFAULT_MODEL,
     'muse-spark-1.3-contributor',
     'glm-5.3-flash',
+    'deepseek-flash',
     'qwen3.8-flash',
 ];
 
