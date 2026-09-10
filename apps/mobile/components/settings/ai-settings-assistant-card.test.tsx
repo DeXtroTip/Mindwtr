@@ -47,6 +47,11 @@ const baseProps: Parameters<typeof AiSettingsAssistantCard>[0] = {
     appleClarificationBackend: 'configured',
     appleClarificationVisible: false,
     aiReasoningEffort: 'medium',
+    aiReasoningOptions: [
+        { value: 'low', label: 'Low' },
+        { value: 'medium', label: 'Medium' },
+        { value: 'high', label: 'High' },
+    ],
     aiRequestTimeoutSeconds: 30,
     aiThinkingBudget: 0,
     anthropicThinkingEnabled: false,

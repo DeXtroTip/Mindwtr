@@ -246,6 +246,36 @@ describe('AISettingsScreen live model lists', () => {
         expect(latest().aiModelOptions).toContain('gpt-5.6-luna');
     });
 
+    it('offers the reasoning tiers the selected OpenCode Go model accepts', async () => {
+        const latest = await renderScreen({
+            ai: {
+                provider: 'opencode-go',
+                model: 'qwen3.8-flash',
+                reasoningEffort: 'high',
+                speechToText: localWhisperSpeech,
+            },
+        });
+
+        expect(latest().aiReasoningOptions).toEqual([
+            { value: 'low', label: 'settings.aiEffortLow' },
+            { value: 'medium', label: 'settings.aiEffortMedium' },
+            { value: 'xhigh', label: 'settings.aiEffortXHigh' },
+        ]);
+    });
+
+    it('shows the tier the request will use, and no tiers for an untunable OpenCode Go model', async () => {
+        // kimi-k3 accepts only `max`, so a stored `high` is displayed as max.
+        const clamped = await renderScreen({
+            ai: { provider: 'opencode-go', model: 'kimi-k3', reasoningEffort: 'high', speechToText: localWhisperSpeech },
+        });
+        expect(clamped().aiReasoningEffort).toBe('max');
+
+        const untunable = await renderScreen({
+            ai: { provider: 'opencode-go', model: 'kimi-k2.6', reasoningEffort: 'high', speechToText: localWhisperSpeech },
+        });
+        expect(untunable().aiReasoningOptions).toEqual([]);
+    });
+
     it('forces the local provider on FOSS builds even with a synced opencode-go setting', async () => {
         constantsState.isFossBuild = true;
 

@@ -17,6 +17,7 @@ type AiSettingsAssistantOpenAiPanelProps = {
     aiExtraBodyParamsDraft: string;
     aiExtraBodyParamsError: string;
     aiReasoningEffort: AIReasoningEffort;
+    aiReasoningOptions: { value: AIReasoningEffort; label: string }[];
     isFossBuild: boolean;
     tr: SettingsTranslator;
     onAiApiKeyChange: (value: string) => void;
@@ -34,6 +35,7 @@ export function AiSettingsAssistantOpenAiPanel({
     aiExtraBodyParamsDraft,
     aiExtraBodyParamsError,
     aiReasoningEffort,
+    aiReasoningOptions,
     isFossBuild,
     tr,
     onAiApiKeyChange,
@@ -58,24 +60,20 @@ export function AiSettingsAssistantOpenAiPanel({
             </View>
             <View style={{ paddingHorizontal: 16, paddingBottom: 12 }}>
                 <View style={styles.backendToggle}>
-                    {(['low', 'medium', 'high'] as AIReasoningEffort[]).map((effort) => (
+                    {aiReasoningOptions.map((option) => (
                         <TouchableOpacity
-                            key={effort}
+                            key={option.value}
                             style={[
                                 styles.backendOption,
-                                { borderColor: tc.border, backgroundColor: aiReasoningEffort === effort ? tc.filterBg : 'transparent' },
+                                { borderColor: tc.border, backgroundColor: aiReasoningEffort === option.value ? tc.filterBg : 'transparent' },
                             ]}
-                            onPress={() => onAiReasoningEffortChange(effort)}
+                            onPress={() => onAiReasoningEffortChange(option.value)}
                         >
                             <CompactText
-                                style={[styles.backendOptionText, { color: aiReasoningEffort === effort ? tc.tint : tc.secondaryText }]}
+                                style={[styles.backendOptionText, { color: aiReasoningEffort === option.value ? tc.tint : tc.secondaryText }]}
                                 numberOfLines={2}
                             >
-                                {effort === 'low'
-                                    ? t('settings.aiEffortLow')
-                                    : effort === 'medium'
-                                        ? t('settings.aiEffortMedium')
-                                        : t('settings.aiEffortHigh')}
+                                {option.label}
                             </CompactText>
                         </TouchableOpacity>
                     ))}

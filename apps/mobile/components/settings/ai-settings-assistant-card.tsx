@@ -35,6 +35,7 @@ type AiSettingsAssistantCardProps = {
     appleClarificationBackend: AppleClarificationBackend;
     appleClarificationVisible: boolean;
     aiReasoningEffort: AIReasoningEffort;
+    aiReasoningOptions: { value: AIReasoningEffort; label: string }[];
     aiRequestTimeoutSeconds: number;
     aiThinkingBudget: number;
     anthropicThinkingEnabled: boolean;
@@ -76,6 +77,7 @@ export function AiSettingsAssistantCard({
     appleClarificationBackend,
     appleClarificationVisible,
     aiReasoningEffort,
+    aiReasoningOptions,
     aiRequestTimeoutSeconds,
     aiThinkingBudget,
     anthropicThinkingEnabled,
@@ -341,6 +343,7 @@ export function AiSettingsAssistantCard({
                             aiExtraBodyParamsDraft={aiExtraBodyParamsDraft}
                             aiExtraBodyParamsError={aiExtraBodyParamsError}
                             aiReasoningEffort={aiReasoningEffort}
+                            aiReasoningOptions={aiReasoningOptions}
                             isFossBuild={isFossBuild}
                             tr={tr}
                             onAiApiKeyChange={onAiApiKeyChange}
@@ -364,6 +367,7 @@ export function AiSettingsAssistantCard({
                         <AiSettingsAssistantOpenCodeGoPanel
                             aiApiKey={aiApiKey}
                             aiReasoningEffort={aiReasoningEffort}
+                            aiReasoningOptions={aiReasoningOptions}
                             onAiApiKeyChange={onAiApiKeyChange}
                             onAiReasoningEffortChange={onAiReasoningEffortChange}
                             t={t}

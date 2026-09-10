@@ -9,12 +9,15 @@ import {
     DEFAULT_ANTHROPIC_THINKING_BUDGET,
     DEFAULT_GEMINI_THINKING_BUDGET,
     DEFAULT_REASONING_EFFORT,
+    clampReasoningEffort,
     fetchProviderModelsCached,
     formatOpenAIExtraBodyParams,
     getCopilotModelOptions,
     getDefaultAIConfig,
     getDefaultCopilotModel,
     getModelOptions,
+    getReasoningEffortLabelKey,
+    getReasoningEffortOptions,
     mergeModelOptions,
     parseOpenAIExtraBodyParamsInput,
     resolveAIRequestTimeoutSeconds,
@@ -109,7 +112,18 @@ export function AISettingsScreen() {
     const aiModelOptions = mergeModelOptions(fetchedChatModels, staticAiModelOptions, aiModel);
     const aiBaseUrl = settings.ai?.baseUrl ?? '';
     const aiOpenAIExtraBodyParams = settings.ai?.openAIExtraBodyParams;
-    const aiReasoningEffort = (settings.ai?.reasoningEffort ?? DEFAULT_REASONING_EFFORT) as AIReasoningEffort;
+    const storedReasoningEffort = (settings.ai?.reasoningEffort ?? DEFAULT_REASONING_EFFORT) as AIReasoningEffort;
+    // Tiers are stored once for every model, so offer only what the selected model
+    // takes and show the tier a request will actually use (the transport clamps an
+    // unsupported stored tier to the nearest one the model accepts).
+    const aiReasoningOptions = getReasoningEffortOptions(aiProvider, aiModel).map((value) => ({
+        value,
+        label: t(getReasoningEffortLabelKey(value)),
+    }));
+    const aiReasoningEffort = clampReasoningEffort(
+        storedReasoningEffort,
+        aiReasoningOptions.map((option) => option.value),
+    ) ?? storedReasoningEffort;
     const aiThinkingBudget = settings.ai?.thinkingBudget ?? getDefaultAIConfig(aiProvider).thinkingBudget ?? 0;
     const staticAiCopilotOptions = isFossBuild ? FOSS_LOCAL_LLM_COPILOT_OPTIONS : getCopilotModelOptions(aiProvider);
     const aiCopilotModel = settings.ai?.copilotModel ?? (isFossBuild ? FOSS_LOCAL_LLM_COPILOT_OPTIONS[0] : getDefaultCopilotModel(aiProvider));
@@ -612,6 +626,7 @@ export function AISettingsScreen() {
                         appleClarificationBackend={appleClarificationBackend}
                         appleClarificationVisible={appleClarificationPrototypeEnabled}
                         aiReasoningEffort={aiReasoningEffort}
+                        aiReasoningOptions={aiReasoningOptions}
                         aiRequestTimeoutSeconds={aiRequestTimeoutSeconds}
                         aiThinkingBudget={aiThinkingBudget}
                         anthropicThinkingEnabled={anthropicThinkingEnabled}
