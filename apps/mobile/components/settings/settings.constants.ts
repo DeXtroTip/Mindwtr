@@ -251,8 +251,8 @@ export const UPDATE_BADGE_LATEST_KEY = 'mindwtr-update-latest';
 export const UPDATE_BADGE_INTERVAL_MS = 1000 * 60 * 60 * 24;
 export const AI_PROVIDER_CONSENT_KEY = 'mindwtr-ai-provider-consent-v1';
 
-export const FOSS_LOCAL_LLM_MODEL_OPTIONS = ['llama3.2', 'qwen2.5', 'mistral', 'phi-4-mini'];
-export const FOSS_LOCAL_LLM_COPILOT_OPTIONS = ['llama3.2', 'qwen2.5', 'mistral', 'phi-4-mini'];
+// Re-exported so the settings screens keep one import site for the local defaults.
+export { FOSS_LOCAL_LLM_COPILOT_OPTIONS, FOSS_LOCAL_LLM_MODEL_OPTIONS } from '../../lib/foss-local-models';
 
 export type MobileExtraConfig = {
     analyticsHeartbeatUrl?: string;

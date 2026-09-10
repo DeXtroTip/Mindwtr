@@ -33,7 +33,6 @@ import {
   shallow,
   splitQuickAddBulkLines,
   tFallback,
-  type AIProviderId,
   type Attachment,
   type CaptureAssemblyInput,
   type CaptureTransactionOptions,
@@ -46,7 +45,7 @@ import { canUploadAttachmentFrom, getAttachmentsDir } from '@/lib/attachment-syn
 import { useThemeColors } from '@/hooks/use-theme-colors';
 import { useToast } from '@/contexts/toast-context';
 import { useLanguage } from '../contexts/language-context';
-import { buildCopilotConfig, isAIKeyRequired, loadAIKey } from '../lib/ai-config';
+import { buildCopilotConfig, isAIKeyRequired, loadAIKey, resolveEffectiveAIProvider } from '../lib/ai-config';
 import { logError, logInfo } from '../lib/app-log';
 import { logIosShareDiagnostic } from '../lib/share-intent-diagnostics';
 import { addHardwareBackPressListener, returnToPreviousApp } from '@/lib/hardware-back';
@@ -306,7 +305,7 @@ export default function CaptureScreen() {
   }, []);
 
   const aiEnabled = settings.ai?.enabled === true;
-  const aiProvider = (settings.ai?.provider ?? 'openai') as AIProviderId;
+  const aiProvider = resolveEffectiveAIProvider(settings);
   const keyRequired = isAIKeyRequired(settings);
   const { priorities: prioritiesEnabled, timeEstimates: timeEstimatesEnabled } = resolveFeatureFlags(settings);
 

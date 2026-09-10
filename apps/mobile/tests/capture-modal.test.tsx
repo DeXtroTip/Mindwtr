@@ -177,10 +177,16 @@ vi.mock('@/contexts/toast-context', () => ({
   }),
 }));
 
+const aiConfigMock = vi.hoisted(() => ({
+  loadAIKey: vi.fn().mockResolvedValue(''),
+  resolveEffectiveAIProvider: vi.fn((settings?: { ai?: { provider?: string } }) => settings?.ai?.provider ?? 'openai'),
+}));
+
 vi.mock('@/lib/ai-config', () => ({
   buildCopilotConfig: vi.fn(),
   isAIKeyRequired: vi.fn(() => false),
-  loadAIKey: vi.fn().mockResolvedValue(''),
+  loadAIKey: aiConfigMock.loadAIKey,
+  resolveEffectiveAIProvider: aiConfigMock.resolveEffectiveAIProvider,
 }));
 
 vi.mock('@/lib/app-log', () => ({
@@ -712,6 +718,19 @@ describe('CaptureScreen', () => {
     expect(announceForAccessibilitySpy).not.toHaveBeenCalled();
     expect(logInfo).not.toHaveBeenCalled();
     vi.useRealTimers();
+  });
+
+  it('resolves the AI provider through resolveEffectiveAIProvider, not the raw setting', async () => {
+    // The helper decides whether a FOSS build may use the synced provider, so a
+    // surface that read settings.ai.provider directly would load a hosted key.
+    storeState.settings = { ai: { enabled: true, provider: 'gemini' }, features: {} } as never;
+
+    await act(async () => {
+      create(<CaptureScreen />);
+    });
+
+    expect(aiConfigMock.resolveEffectiveAIProvider).toHaveBeenCalledWith(storeState.settings);
+    expect(aiConfigMock.loadAIKey).toHaveBeenCalledWith('gemini');
   });
 
   it('reads the parsed draft back as chips under the input', () => {

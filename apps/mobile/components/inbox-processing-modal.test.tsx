@@ -336,6 +336,7 @@ vi.mock('../lib/ai-config', () => ({
   loadAIKey: vi.fn().mockResolvedValue(''),
   isAIKeyRequired: vi.fn().mockReturnValue(false),
   buildAIConfig: vi.fn().mockReturnValue({}),
+  resolveEffectiveAIProvider: (settings?: { ai?: { provider?: string } }) => settings?.ai?.provider ?? 'openai',
 }));
 
 vi.mock('../lib/app-log', () => ({

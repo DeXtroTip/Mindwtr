@@ -16,6 +16,7 @@ vi.mock('../../lib/ai-config', () => ({
   buildCopilotConfig: () => ({}),
   isAIKeyRequired: () => false,
   loadAIKey: async () => 'test-key',
+  resolveEffectiveAIProvider: (settings?: { ai?: { provider?: string } }) => settings?.ai?.provider ?? 'openai',
 }));
 
 vi.mock('../../lib/app-log', () => ({ logError: vi.fn() }));

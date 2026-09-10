@@ -1,8 +1,10 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import Constants from 'expo-constants';
 import * as SecureStore from 'expo-secure-store';
 import type { AIProviderConfig, AIProviderId, AppData } from '@mindwtr/core';
 import { buildAIConfig as buildCoreAIConfig, buildCopilotConfig as buildCoreCopilotConfig, getAIKeyStorageKey, isSandboxMode, loadAIKeyFromStorage, saveAIKeyToStorage } from '@mindwtr/core';
 import { logInfo } from './app-log';
+import { FOSS_LOCAL_LLM_COPILOT_OPTIONS, FOSS_LOCAL_LLM_MODEL_OPTIONS } from './foss-local-models';
 
 import {
     deleteSessionSecret,
@@ -72,9 +74,45 @@ export async function saveAIKey(provider: AIProviderId, value: string): Promise<
     }
 }
 
+const isFossBuild = (): boolean => {
+    const extra = Constants.expoConfig?.extra as { isFossBuild?: unknown } | undefined;
+    return extra?.isFossBuild === true || extra?.isFossBuild === 'true';
+};
+
+/**
+ * The provider an AI request will actually use. FOSS builds only ever talk to the
+ * local OpenAI-compatible server, so a synced hosted provider must not decide
+ * which API key an AI surface loads or which model it asks the server for. Every
+ * mobile AI path resolves the provider through here instead of reading
+ * `settings.ai.provider`.
+ *
+ * @example resolveEffectiveAIProvider({ ai: { provider: 'gemini' } }) // 'openai' on a FOSS build
+ */
+export function resolveEffectiveAIProvider(settings: AppData['settings'] | undefined): AIProviderId {
+    const provider = (settings?.ai?.provider ?? 'openai') as AIProviderId;
+    return isFossBuild() && provider !== 'openai' ? 'openai' : provider;
+}
+
+const sanitizeFossSettings = (settings: AppData['settings'] | undefined): AppData['settings'] => {
+    const source = settings ?? {};
+    const provider = resolveEffectiveAIProvider(source);
+    if (provider === (source.ai?.provider ?? 'openai')) return source;
+    // A synced hosted provider carries that provider's model names, which the
+    // local server does not serve, so the rewrite also returns to local defaults.
+    return {
+        ...source,
+        ai: {
+            ...source.ai,
+            provider,
+            model: FOSS_LOCAL_LLM_MODEL_OPTIONS[0],
+            copilotModel: FOSS_LOCAL_LLM_COPILOT_OPTIONS[0],
+        },
+    };
+};
+
 export function isAIKeyRequired(settings: AppData['settings'] | undefined): boolean {
     if (isSandboxMode()) return false;
-    const config = buildCoreAIConfig(settings ?? {}, '');
+    const config = buildCoreAIConfig(sanitizeFossSettings(settings), '');
     return !(config.provider === 'openai' && Boolean(config.endpoint));
 }
 
@@ -95,10 +133,10 @@ const withRequestDiagnostics = (config: AIProviderConfig): AIProviderConfig => (
 
 export function buildAIConfig(settings: AppData['settings'], apiKey: string): AIProviderConfig {
     if (isSandboxMode()) throw new Error('Unavailable in sandbox');
-    return withRequestDiagnostics(buildCoreAIConfig(settings, apiKey));
+    return withRequestDiagnostics(buildCoreAIConfig(sanitizeFossSettings(settings), apiKey));
 }
 
 export function buildCopilotConfig(settings: AppData['settings'], apiKey: string): AIProviderConfig {
     if (isSandboxMode()) throw new Error('Unavailable in sandbox');
-    return withRequestDiagnostics(buildCoreCopilotConfig(settings, apiKey));
+    return withRequestDiagnostics(buildCoreCopilotConfig(sanitizeFossSettings(settings), apiKey));
 }

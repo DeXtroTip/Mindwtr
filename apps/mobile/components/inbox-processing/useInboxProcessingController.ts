@@ -40,7 +40,6 @@ import {
   undoTaskCompletion,
   resolveAutoTextDirection,
   useTaskStore,
-  type AIProviderId,
   resolveTimeEstimateOptions,
   type ProcessInboxDecision,
   type ProcessInboxSession,
@@ -61,7 +60,7 @@ import { useToast } from '../../contexts/toast-context';
 import { useThemeColors } from '@/hooks/use-theme-colors';
 import { useVisibleTaskContext } from '@/hooks/use-visible-tasks';
 import { getAssignedToSuggestions, rankTokenSuggestions } from '../task-metadata-suggestions';
-import { buildAIConfig, isAIKeyRequired, loadAIKey } from '../../lib/ai-config';
+import { buildAIConfig, isAIKeyRequired, loadAIKey, resolveEffectiveAIProvider } from '../../lib/ai-config';
 import { logWarn } from '../../lib/app-log';
 import { readAppleClarificationBackend } from '../../lib/apple-clarification-preference';
 import {
@@ -234,7 +233,7 @@ export function useInboxProcessingController({
   } = processInboxPlan.visibleFields;
   const defaultScheduleTime = normalizeClockTimeInput(settings?.gtd?.defaultScheduleTime) || '';
   const aiEnabled = settings?.ai?.enabled === true;
-  const aiProvider = (settings?.ai?.provider ?? 'openai') as AIProviderId;
+  const aiProvider = resolveEffectiveAIProvider(settings);
   const appleClarificationPrototypeEnabled = isAppleClarificationPrototypeEnabled();
   const aiClarifyEnabled = appleClarificationBackend === 'on-device'
     ? appleClarificationPrototypeEnabled

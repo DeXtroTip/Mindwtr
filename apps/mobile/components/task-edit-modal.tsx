@@ -27,6 +27,7 @@ import { Task,
     tFallback, } from '@mindwtr/core';
 import { taskDraftToUpdatePatch } from '@mindwtr/core/task-draft';
 import { useLanguage } from '../contexts/language-context';
+import { resolveEffectiveAIProvider } from '../lib/ai-config';
 import { useThemeColors } from '@/hooks/use-theme-colors';
 import { useAdaptiveWindow } from '@/components/adaptive-window-context';
 import { useReducedMotion } from '@/hooks/use-reduced-motion';
@@ -318,7 +319,7 @@ function TaskEditModalInner({
     const recurrenceWeekdayButtons = useMemo(() => getLocalizedWeekdayButtons(language, 'narrow'), [language]);
     const recurrenceWeekdayLabels = useMemo(() => getLocalizedWeekdayLabels(language, 'long'), [language]);
     const aiEnabled = settings.ai?.enabled === true;
-    const aiProvider = settings.ai?.provider ?? 'openai';
+    const aiProvider = resolveEffectiveAIProvider(settings);
 
     const draftContexts = useMemo(
         () => parseTokenList(taskEditDraft?.draft.contexts ?? '', '@'),

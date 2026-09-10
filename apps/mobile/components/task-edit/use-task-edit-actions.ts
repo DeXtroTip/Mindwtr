@@ -7,14 +7,13 @@ import {
     TimeEstimate,
     createAIProvider,
     generateUUID,
-    type AIProviderId,
     getUsedTaskTokens,
     tFallback,
     type StoreActionResult,
 } from '@mindwtr/core';
 
 import type { AIResponseAction } from '../ai-response-modal';
-import { buildAIConfig, isAIKeyRequired, loadAIKey } from '../../lib/ai-config';
+import { buildAIConfig, isAIKeyRequired, loadAIKey, resolveEffectiveAIProvider } from '../../lib/ai-config';
 import { logTaskError, logTaskWarn } from './task-edit-modal.utils';
 import { openProjectScreen, openTaskScreen } from '../../lib/task-meta-navigation';
 import { settleStoreAction } from '../store-action-result';
@@ -372,7 +371,7 @@ export function useTaskEditActions({
             Alert.alert(t('ai.disabledTitle'), t('ai.disabledBody'));
             return null;
         }
-        const provider = (settings.ai?.provider ?? 'openai') as AIProviderId;
+        const provider = resolveEffectiveAIProvider(settings);
         const apiKey = await loadAIKey(provider);
         if (isAIKeyRequired(settings) && !apiKey) {
             Alert.alert(t('ai.missingKeyTitle'), t('ai.missingKeyBody'));

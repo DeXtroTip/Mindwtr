@@ -12,7 +12,6 @@ import {
     parseStoredReviewStepSession,
     resolveFeatureFlags,
     resolveReviewStepSession,
-    type AIProviderId,
     type ExternalCalendarEvent,
     type ReviewSuggestion,
     type StoredReviewStepSession,
@@ -38,7 +37,7 @@ import { useLanguage } from '../../contexts/language-context';
 import { useQuickCapture } from '../../contexts/quick-capture-context';
 import { useThemeColors } from '@/hooks/use-theme-colors';
 import { openContextsScreen, openProjectScreen } from '@/lib/task-meta-navigation';
-import { buildAIConfig, isAIKeyRequired, loadAIKey } from '../../lib/ai-config';
+import { buildAIConfig, isAIKeyRequired, loadAIKey, resolveEffectiveAIProvider } from '../../lib/ai-config';
 import { logError } from '../../lib/app-log';
 import { fetchExternalCalendarEvents } from '../../lib/external-calendar';
 import { maybeRequestStoreReviewAfterPositiveMoment } from '../../lib/store-review-prompt';
@@ -126,7 +125,7 @@ export function useReviewModalController({
     const tc = useThemeColors();
     const aiEnabled = settings?.ai?.enabled === true;
     const includeContextStep = settings?.gtd?.weeklyReview?.includeContextStep !== false;
-    const aiProvider = (settings?.ai?.provider ?? 'openai') as AIProviderId;
+    const aiProvider = resolveEffectiveAIProvider(settings);
 
     useEffect(() => {
         if (!visible) {

@@ -299,6 +299,7 @@ vi.mock('../lib/ai-config', () => ({
   isAIKeyRequired: vi.fn().mockReturnValue(false),
   buildAIConfig: vi.fn().mockReturnValue({}),
   buildCopilotConfig: vi.fn().mockReturnValue({}),
+  resolveEffectiveAIProvider: (settings?: { ai?: { provider?: string } }) => settings?.ai?.provider ?? 'openai',
 }));
 
 vi.mock('../components/task-edit/TaskEditViewTab', () => ({
